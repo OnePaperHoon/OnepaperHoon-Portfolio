@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    .slide-container { width: 1280px; min-height: 720px; display: flex; flex-direction: column; background: #FFFFFF; color: #111111; font-family: Arial, Helvetica, sans-serif; }
+    .frame { min-height: 720px; display: flex; flex-direction: column; padding-top: 44px; padding-left: 52px; padding-right: 52px; }
+    .topline { display: flex; justify-content: space-between; border-top: 2px solid #FF3300; padding-top: 12px; color: #FF3300; font-size: 15px; font-weight: 900; letter-spacing: 1px; }
+    .heading { display: grid; grid-template-columns: 7fr 5fr; gap: 36px; margin-top: 52px; align-items: end; }
+    h1 { max-width: 720px; font-size: 67px; font-weight: 900; line-height: .9; letter-spacing: -4.7px; }
+    h1 span { color: #FF3300; }
+    .heading p { max-width: 330px; color: #5f5f5f; font-size: 17px; font-weight: 300; line-height: 1.45; }
+    .roadmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: auto; margin-bottom: 38px; border-top: 2px solid #111111; border-bottom: 2px solid #111111; }
+    .phase { min-height: 288px; display: flex; flex-direction: column; padding-top: 22px; padding-left: 20px; padding-right: 20px; border-right: 2px solid #111111; }
+    .phase:first-child { padding-left: 0; }
+    .phase:last-child { border-right: 0; }
+    .phase-tag { color: #FF3300; font-size: 15px; font-weight: 900; letter-spacing: 1px; }
+    .phase h2 { margin-top: 34px; font-size: 36px; font-weight: 900; line-height: .93; letter-spacing: -2.4px; }
+    .phase h2 span { color: #FF3300; }
+    .phase p { max-width: 280px; margin-top: 15px; color: #666666; font-size: 15px; line-height: 1.42; }
+    .phase--mvp { background: #111111; color: #FFFFFF; padding-left: 22px; }
+    .phase--mvp p { color: #D0D0D0; }
+    .phase--mvp .phase-tag { color: #FF3300; }
+    .done { margin-top: auto; border-top: 2px solid currentColor; padding-top: 12px; font-size: 13px; font-weight: 800; line-height: 1.35; }
+    .phase--mvp .done { color: #FFFFFF; }
+    .footer { display: flex; justify-content: space-between; margin-bottom: 20px; color: #6b6b6b; font-size: 14px; font-weight: 700; letter-spacing: .1px; }
+    .footer strong { color: #111111; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <div class="frame">
+      <div class="topline"><span>09 / DELIVERY ROADMAP</span><span>PRIORITY OVER VOLUME</span></div>
+      <div class="heading">
+        <h1>핵심 경험부터<br><span>완성한다.</span></h1>
+        <p>처음부터 모든 메뉴와 효과를 만들지 않는다. 실제 프로젝트 콘텐츠가 가장 강하게 읽히는 흐름부터 완성한다.</p>
+      </div>
+      <div class="roadmap">
+        <article class="phase phase--mvp">
+          <span class="phase-tag">MVP / FIRST RELEASE</span>
+          <h2>핵심<br>경험</h2>
+          <p>홈, 대표 프로젝트 상세 2개, 어바웃, 테마 전환, 반응형 내비게이션.</p>
+          <div class="done">완료 기준: 정체성·작업 품질·연락 경로가 한 번에 읽힌다.</div>
+        </article>
+        <article class="phase">
+          <span class="phase-tag">V1 / DISCOVER</span>
+          <h2>탐색의<br><span>범위</span></h2>
+          <p>전체 프로젝트 인덱스, 갤러리 라이트박스, 다음 프로젝트, Notes의 기본 구조.</p>
+          <div class="done">완료 기준: 대표 작업 5–7개를 자연스럽게 이어서 탐색한다.</div>
+        </article>
+        <article class="phase">
+          <span class="phase-tag">V2 / EXTEND</span>
+          <h2>실험의<br><span>깊이</span></h2>
+          <p>Playground, 프로젝트 필터, 정교한 전환, 이미지·모션 성능 고도화.</p>
+          <div class="done">완료 기준: 실험이 작업 세계의 지속적인 증거가 된다.</div>
+        </article>
+      </div>
+      <div class="footer"><span><strong>RULE:</strong> 고급 효과보다 실제 프로젝트 이미지와 사례의 밀도를 우선한다.</span><span>BUILD THE STAGE, THEN EXPAND THE FIELD.</span></div>
+    </div>
+  </div>
+</body>
+</html>

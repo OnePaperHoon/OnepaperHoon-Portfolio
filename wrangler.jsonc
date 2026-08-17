@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "onepaperhoon-portfolio",
+  "compatibility_date": "2026-08-01",
+  // Assets-only deployment: the site is fully static (works are added by
+  // editing client/src/content/projects.ts and redeploying). No Worker code,
+  // no database, no bucket.
+  "assets": {
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    { "pattern": "onepaperhoon.com", "custom_domain": true },
+    { "pattern": "www.onepaperhoon.com", "custom_domain": true }
+  ]
+}

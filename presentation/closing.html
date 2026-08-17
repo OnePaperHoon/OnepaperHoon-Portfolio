@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    .slide-container { width: 1280px; min-height: 720px; display: flex; flex-direction: column; background: #111111; color: #FFFFFF; font-family: Arial, Helvetica, sans-serif; padding-top: 48px; padding-left: 54px; padding-right: 54px; }
+    .top { display: flex; align-items: center; justify-content: space-between; border-top: 2px solid #FF3300; padding-top: 12px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 15px; font-weight: 900; letter-spacing: -.7px; }
+    .mark { position: relative; display: inline-block; width: 17px; min-height: 24px; border-left: 4px solid #FF3300; border-right: 4px solid #FF3300; }
+    .mark::after { content: ""; position: absolute; left: 3px; top: 5px; width: 4px; min-height: 15px; background: #FF3300; }
+    .index { color: #FF3300; font-size: 15px; font-weight: 900; letter-spacing: 1px; }
+    .message { margin-top: auto; margin-bottom: auto; max-width: 1080px; font-size: 94px; font-weight: 900; line-height: .84; letter-spacing: -6.8px; }
+    .message span { color: #FF3300; }
+    .bottom { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 44px; margin-bottom: 42px; border-top: 2px solid rgba(255,255,255,.34); padding-top: 17px; }
+    .bottom p { max-width: 530px; color: #C2C2C2; font-size: 22px; font-weight: 300; line-height: 1.15; letter-spacing: -1px; }
+    .bottom strong { color: #FFFFFF; font-weight: 800; }
+    .signal { display: flex; align-items: center; gap: 14px; color: #FF3300; font-size: 14px; font-weight: 900; letter-spacing: .8px; }
+    .dot { width: 20px; min-height: 20px; border-radius: 50%; background: #FF3300; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <div class="top">
+      <div class="brand"><span class="mark"></span><span>onepaperhoon</span></div>
+      <div class="index">11 / 11</div>
+    </div>
+    <h1 class="message">A clear question<br>is <span>enough.</span></h1>
+    <div class="bottom">
+      <p>Bring a question.<br><strong>We’ll find its shape.</strong></p>
+      <div class="signal"><span>OPEN TO START</span><span class="dot"></span></div>
+    </div>
+  </div>
+</body>
+</html>

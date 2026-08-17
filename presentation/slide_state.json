@@ -1,0 +1,133 @@
+{
+  "project_info": {
+    "title": "onepaperhoon.com",
+    "created": 1786735329.447,
+    "last_updated": 1786735512.742,
+    "total_slides": 11
+  },
+  "slides": [
+    {
+      "id": "cover",
+      "state": "edited",
+      "pageNum": 1
+    },
+    {
+      "id": "purpose",
+      "state": "edited",
+      "pageNum": 2
+    },
+    {
+      "id": "signal_field",
+      "state": "edited",
+      "pageNum": 3
+    },
+    {
+      "id": "home_flow",
+      "state": "edited",
+      "pageNum": 4
+    },
+    {
+      "id": "card_interaction",
+      "state": "edited",
+      "pageNum": 5
+    },
+    {
+      "id": "detail_story",
+      "state": "edited",
+      "pageNum": 6
+    },
+    {
+      "id": "decisions",
+      "state": "edited",
+      "pageNum": 7
+    },
+    {
+      "id": "themes",
+      "state": "edited",
+      "pageNum": 8
+    },
+    {
+      "id": "responsive",
+      "state": "edited",
+      "pageNum": 9
+    },
+    {
+      "id": "roadmap",
+      "state": "edited",
+      "pageNum": 10
+    },
+    {
+      "id": "closing",
+      "state": "edited",
+      "pageNum": 11
+    }
+  ],
+  "outline": [
+    {
+      "id": "cover",
+      "title": "onepaperhoon.com",
+      "summary": "모션으로 읽히는 개인 포트폴리오 경험 설계. Signal Field, 2026.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "purpose",
+      "title": "작업을 관점으로 경험시킨다",
+      "summary": "결과물을 나열하지 않고 독립 디지털 프랙티스의 관점과 제작 역량을 보여 주는 포트폴리오의 목적.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "signal_field",
+      "title": "Signal Field",
+      "summary": "Ink Black 캔버스와 Signal Lime 상태 신호를 중심으로 한 시각 시스템.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "home_flow",
+      "title": "홈의 탐색 흐름",
+      "summary": "대형 선언문에서 비대칭 대표 작업 그리드와 협업 CTA로 이어지는 첫 화면 구조.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "card_interaction",
+      "title": "카드는 전시 오브젝트처럼 반응한다",
+      "summary": "포인터 글로우, 미세한 틸트, 프레임과 화살표 상태를 활용한 카드 상호작용.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "detail_story",
+      "title": "상세 페이지의 서사",
+      "summary": "Hero에서 Overview, Principle, Process, Outcome, Reflection, Next로 이어지는 사례 흐름.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "decisions",
+      "title": "세 번의 판단을 드러낸다",
+      "summary": "관찰, 실험, 결정의 세 단계로 프로젝트의 사고 과정을 설명하는 방법.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "themes",
+      "title": "하나의 구조, 두 가지 테마",
+      "summary": "다크 모드를 기본 무대로 삼고 라이트 모드를 읽기용 대안으로 제공하는 테마 원칙.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "responsive",
+      "title": "반응형은 우선순위를 재배치한다",
+      "summary": "데스크톱의 공간적 리듬을 모바일의 명확한 세로 흐름으로 전환하는 기준.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "roadmap",
+      "title": "핵심 경험부터 완성한다",
+      "summary": "MVP부터 확장 단계까지 실제 포트폴리오 제작 우선순위.",
+      "image_plan": "Use a suitable image if needed"
+    },
+    {
+      "id": "closing",
+      "title": "A clear question is enough.",
+      "summary": "질문을 가져오면 그 형태를 함께 찾는다는 메시지로 마무리.",
+      "image_plan": "Use a suitable image if needed"
+    }
+  ]
+}
