@@ -14,6 +14,13 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
 ---
 
 <Base flyIn>
+  <!-- 캔버스보다 위에 놓이는 워드마크 사본. "paper"만 보이게 해서 종이가 그 글자 뒤로 지나갑니다. -->
+  <div class="hero-over" aria-hidden="true">
+    <div class="shell hero__words">
+      <p class="hero__hello">안녕하세요, 한장훈입니다</p>
+      <span class="wordmark"><i>one</i><b>paper</b><i>hoon</i></span>
+    </div>
+  </div>
   <section class="scene scene--dawn" data-tone-zone="dark">
     <div class="scene__grain" aria-hidden="true"></div>
     <div class="hero">
@@ -23,7 +30,7 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
         <h1 class="wordmark">onepaperhoon</h1>
         <p class="hero__tagline">한 장에서 시작해,<br />매일 돌아가는 서비스로.</p>
       </div>
-      <PaperSlot class="hero__slot" label="One paper" title="한 장" body={"한장훈 → 한 장 → one paper.\n작업을 한 장씩 넘겨 보세요."} foot="00" tilt="-10,18,-7" shadow={0} />
+      <PaperSlot class="hero__slot" label="One paper" title="한 장" body={"한장훈 → 한 장 → one paper.\n작업을 한 장씩 넘겨 보세요."} foot="00" tilt="-10,18,-7" shadow={0} backlit={0.2} />
       <ul class="hero__made" aria-label="만든 것들">
         {works.map((work) => <li><a href={`/work/${work.id}`}>{work.data.title}</a></li>)}
       </ul>

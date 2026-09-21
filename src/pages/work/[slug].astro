@@ -8,7 +8,12 @@ export async function getStaticPaths() {
   const works = (await getCollection("work", ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
   return works.map((entry, index) => ({
     params: { slug: entry.id },
-    props: { entry, previous: works[(index - 1 + works.length) % works.length], next: works[(index + 1) % works.length] },
+    props: {
+      entry,
+      previous: works[(index - 1 + works.length) % works.length],
+      next: works[(index + 1) % works.length],
+      foot: `${String(index + 1).padStart(2, "0")} / ${String(works.length).padStart(2, "0")}`,
+    },
   }));
 }
 
@@ -16,8 +21,10 @@ interface Props {
   entry: CollectionEntry<"work">;
   previous: CollectionEntry<"work">;
   next: CollectionEntry<"work">;
+  /** 홈 카드가 종이에 띄우던 것과 같은 쪽번호 — 같은 종이가 그대로 넘어오게 합니다. */
+  foot: string;
 }
-const { entry, previous, next } = Astro.props;
+const { entry, previous, next, foot } = Astro.props;
 const { data } = entry;
 const { Content } = await render(entry);
 ---
@@ -36,7 +43,7 @@ const { Content } = await render(entry);
             {data.links.repo && <a class="pill pill--ghost" href={data.links.repo} target="_blank" rel="noreferrer">GitHub</a>}
           </div>
         </div>
-        <PaperSlot class="detail__slot" label="Principle" title={data.paper} body={data.kind} foot={data.title} tilt="-5,-16,5" />
+        <PaperSlot class="detail__slot" label={data.title} title={data.paper} body={data.kind} foot={foot} tilt="-5,-16,5" />
       </div>
 
       <dl class="facts">

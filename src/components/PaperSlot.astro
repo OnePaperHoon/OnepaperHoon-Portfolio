@@ -13,9 +13,13 @@ interface Props {
   /** 그림자 진하기 0~1. 하늘 위에서는 0. */
   shadow?: number;
   fold?: "plane";
+  /** 역광 세기 0~1. 해를 등진 자리일수록 반대쪽 면의 인쇄가 비칩니다. */
+  backlit?: number;
+  /** 종이가 살아 있을 때만 보이는 작은 안내 문구 */
+  hint?: string;
   class?: string;
 }
-const { label, title, body = "", foot = "", tilt = "-4,10,-4", shadow = 0.2, fold, class: className } = Astro.props;
+const { label, title, body = "", foot = "", tilt = "-4,10,-4", shadow = 0.2, fold, backlit, hint, class: className } = Astro.props;
 const rot = Number(tilt.split(",")[2] ?? 0);
 ---
 
@@ -30,6 +34,7 @@ const rot = Number(tilt.split(",")[2] ?? 0);
   data-tilt={tilt}
   data-shadow={shadow}
   data-fold={fold}
+  data-backlit={backlit}
 >
   <div class="paper-card">
     <span class="paper-card__label">{label}</span>
@@ -37,4 +42,5 @@ const rot = Number(tilt.split(",")[2] ?? 0);
     {body && <span class="paper-card__body">{body}</span>}
     <span class="paper-card__foot"><span>{foot}</span><span>onepaperhoon</span></span>
   </div>
+  {hint && <span class="paper-slot__hint">{hint}</span>}
 </div>

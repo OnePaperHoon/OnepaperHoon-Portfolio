@@ -20,21 +20,19 @@ const links = [
 </header>
 
 <script>
-  // 헤더 아래에 깔린 구간의 밝기에 맞춰 글자색을 바꿉니다.
-  const header = document.querySelector<HTMLElement>(".site-header");
-  const zones = [...document.querySelectorAll<HTMLElement>("[data-tone-zone]")];
-  if (header && zones.length) {
-    const update = () => {
-      const probe = 42;
-      const zone = zones.find((el) => {
-        const rect = el.getBoundingClientRect();
-        return rect.top <= probe && rect.bottom > probe;
-      });
-      header.dataset.tone = zone?.dataset.toneZone ?? "light";
-      header.classList.toggle("is-scrolled", window.scrollY > 24);
-    };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-  }
+  // 헤더 아래에 깔린 구간의 밝기에 맞춰 글자색을 바꿉니다. 헤더와 구간은 페이지마다 새로 생기므로 매번 다시 찾습니다.
+  const update = () => {
+    const header = document.querySelector<HTMLElement>(".site-header");
+    if (!header) return;
+    const probe = 42;
+    const zone = [...document.querySelectorAll<HTMLElement>("[data-tone-zone]")].find((el) => {
+      const rect = el.getBoundingClientRect();
+      return rect.top <= probe && rect.bottom > probe;
+    });
+    header.dataset.tone = zone?.dataset.toneZone ?? "light";
+    header.classList.toggle("is-scrolled", window.scrollY > 24);
+  };
+  document.addEventListener("astro:page-load", update);
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
 </script>

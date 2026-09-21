@@ -1,5 +1,6 @@
 ---
 import "@/styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import { site } from "@/site";
@@ -53,6 +54,7 @@ const person = {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@800;900&family=JetBrains+Mono:wght@400;500&display=swap" />
     <script type="application/ld+json" is:inline set:html={JSON.stringify(person)} />
+    <ClientRouter />
   </head>
   <body>
     <Header />
@@ -60,24 +62,30 @@ const person = {
       <slot />
     </main>
     <Footer />
+    <!-- 종이 무대: 페이지를 이동해도 같은 캔버스가 유지됩니다 -->
+    <div id="paper-root" transition:persist="paper-root" transition:name="paper-stage" aria-hidden="true"></div>
 
     <script>
-      // 스크롤 등장
-      const risers = document.querySelectorAll<HTMLElement>("[data-rise]");
-      const observer = new IntersectionObserver(
-        (entries) => entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-in");
-          observer.unobserve(entry.target);
-        }),
-        { threshold: 0.15, rootMargin: "0px 0px -6% 0px" },
-      );
-      risers.forEach((el) => observer.observe(el));
+      // ClientRouter 아래에서 모듈 스크립트는 한 번만 실행되므로, 페이지마다 할 일은 astro:page-load에 겁니다.
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let observer: IntersectionObserver | undefined;
 
-      // 종이 무대: 동작 줄이기를 켠 환경에서는 CSS 종이 카드로 둡니다.
-      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        import("@/scripts/paper/stage").then(({ mountPaper }) => mountPaper()).catch(() => undefined);
-      }
+      document.addEventListener("astro:page-load", () => {
+        // 스크롤 등장
+        observer?.disconnect();
+        observer = new IntersectionObserver(
+          (entries) => entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add("is-in");
+            observer?.unobserve(entry.target);
+          }),
+          { threshold: 0.15, rootMargin: "0px 0px -6% 0px" },
+        );
+        document.querySelectorAll<HTMLElement>("[data-rise]").forEach((el) => observer?.observe(el));
+
+        // 종이 무대: 동작 줄이기를 켠 환경에서는 CSS 종이 카드로 둡니다.
+        if (!reduced.matches) import("@/scripts/paper/stage").then(({ mountPaper }) => mountPaper()).catch(() => undefined);
+      });
     </script>
   </body>
 </html>

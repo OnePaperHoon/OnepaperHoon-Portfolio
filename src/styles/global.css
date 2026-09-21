@@ -90,7 +90,9 @@ h1, h2, h3, p { margin: 0; }
 .site-nav a:hover, .site-nav a[aria-current="page"] { opacity: 1; text-decoration: underline; text-underline-offset: 6px; }
 
 /* ---------- 종이 슬롯 ---------- */
-.paper-stage { position: fixed; inset: 0; z-index: 10; width: 100vw; height: 100vh; height: 100dvh; pointer-events: none; }
+/* 무대 상자 자체가 화면 크기여야 페이지 전환(view transition) 스냅샷에 종이가 온전히 담깁니다. */
+#paper-root { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+.paper-stage { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .paper-slot { position: relative; width: var(--slot-w, 300px); max-width: 100%; aspect-ratio: 1 / 1.414; }
 .paper-card {
   position: absolute; inset: 0; display: flex; flex-direction: column; padding: 9% 9% 8%; border-radius: 3px;
@@ -105,6 +107,14 @@ h1, h2, h3, p { margin: 0; }
 .paper-card__body { margin-top: 5cqw; color: var(--muted); font-size: 4.1cqw; line-height: 1.55; white-space: pre-line; }
 .paper-card__foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 4cqw; border-top: 1px solid var(--line); color: var(--muted); font-size: 3cqw; font-weight: 600; }
 .has-paper .paper-card { opacity: 0; }
+.paper-slot__hint { position: absolute; inset: auto -40px -34px; font-size: 0.86rem; font-weight: 600; text-align: center; opacity: 0; transition: opacity 600ms var(--ease) 900ms; }
+.has-paper .paper-slot__hint { opacity: 0.78; }
+.has-paper .paper-slot[data-fold="plane"] { cursor: grab; touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; }
+.has-paper .paper-slot[data-fold="plane"]:active { cursor: grabbing; }
+/* 페이지 전환 동안에도 종이는 살아서 움직입니다: 이전 장면의 정지 스냅샷은 버립니다. */
+::view-transition-old(paper-stage) { display: none; }
+::view-transition-new(paper-stage) { animation: none; }
+::view-transition-group(paper-stage) { animation: none; }
 
 /* ---------- 히어로 장면 ---------- */
 .scene { position: relative; isolation: isolate; color: #fff; overflow: clip; }
@@ -125,6 +135,10 @@ h1, h2, h3, p { margin: 0; }
 .hero__hello { margin-left: 0.4vw; font-size: clamp(1.15rem, 2.3vw, 2.1rem); font-weight: 700; letter-spacing: -0.03em; }
 .wordmark { display: block; margin-top: 0.06em; font-family: var(--display); font-size: clamp(2.4rem, 9.35vw, 9.6rem); font-weight: 900; letter-spacing: -0.065em; line-height: 0.95; white-space: nowrap; text-shadow: 0 10px 60px rgba(54, 36, 140, 0.18); }
 .hero__tagline { margin: clamp(18px, 3vw, 40px) 0 0 auto; max-width: 17em; font-size: clamp(1.2rem, 2.35vw, 2.15rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.22; text-align: right; }
+.hero-over { position: absolute; inset: 0 0 auto; z-index: 11; color: #fff; pointer-events: none; }
+.hero-over .hero__hello, .hero-over .wordmark i { visibility: hidden; font-style: normal; }
+.hero-over .wordmark { text-shadow: none; }
+.hero-over .wordmark b { font-weight: inherit; }
 .hero__slot { position: absolute; left: 50%; top: clamp(300px, 43vh, 440px); z-index: 1; --slot-w: clamp(170px, 17.5vw, 262px); transform: translateX(-66%); }
 .hero__made { position: relative; z-index: 2; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px clamp(20px, 4vw, 56px); margin: auto 0 0; padding: 0 var(--gutter) clamp(44px, 8vh, 84px); list-style: none; }
 .hero__made a { font-family: var(--display); font-size: clamp(0.8rem, 1.25vw, 1.08rem); font-weight: 800; letter-spacing: -0.04em; text-decoration: none; opacity: 0.95; }
@@ -232,6 +246,7 @@ h1, h2, h3, p { margin: 0; }
 .footer__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
 .footer__slot { justify-self: center; --slot-w: clamp(200px, 26vw, 360px); }
 .footer__slot .paper-card { display: none; }
+main { position: relative; }
 .footer__base { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 18px; margin-top: 60px; font-size: 0.92rem; color: rgba(255, 255, 255, 0.86); }
 .footer__base .brand { font-size: clamp(1.4rem, 3vw, 2.4rem); color: #fff; }
 .footer__links { display: flex; gap: 22px; }

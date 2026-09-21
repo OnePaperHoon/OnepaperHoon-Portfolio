@@ -11,11 +11,11 @@ import { site } from "@/site";
       <h2 class="footer__title" data-rise>한 장이면<br />충분합니다.</h2>
       <p class="footer__text" data-rise style="--i:1">만들고 싶은 것, 같이 풀고 싶은 문제가 있다면 한 장 분량으로 적어 보내주세요. 종이비행기로 접어 보내도 받습니다.</p>
       <div class="footer__actions" data-rise style="--i:2">
-        <a class="pill pill--light" href={`mailto:${site.email}`}>메일 보내기</a>
+        <a class="pill pill--light" href={`mailto:${site.email}`} data-paper-launch>메일 보내기</a>
         <a class="pill pill--ghost" href={site.github} target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </div>
-    <PaperSlot class="footer__slot" label="To. 한장훈" title="여기까지 읽어주셔서 고맙습니다." body="다음 한 장은 당신 차례." foot="fin." tilt="0,0,0" shadow={0} fold="plane" />
+    <PaperSlot class="footer__slot" label="To. 한장훈" title="여기까지 읽어주셔서 고맙습니다." body="다음 한 장은 당신 차례." foot="fin." tilt="0,0,0" shadow={0} backlit={0.16} fold="plane" hint="눌러서 날려보세요" />
   </div>
   <div class="shell footer__base">
     <a class="brand" href="/">onepaperhoon</a>
