@@ -1,14 +1,18 @@
 ---
 import Base from "@/layouts/Base.astro";
+import PaperSlot from "@/components/PaperSlot.astro";
 ---
 
 <Base title="없는 페이지">
   <section class="shell lost" data-tone-zone="light">
-    <div>
-      <p class="eyebrow detail__kind">404</p>
-      <h1 class="headline">이 장은 비어 있습니다.</h1>
-      <p class="lede" style="margin-top:18px">주소가 바뀌었거나, 아직 쓰지 않은 페이지입니다.</p>
-      <a class="pill pill--plain" href="/">← 첫 장으로</a>
+    <div class="detail__grid">
+      <div>
+        <p class="eyebrow detail__kind">404</p>
+        <h1 class="headline">이 장은 비어 있습니다.</h1>
+        <p class="lede" style="margin-top:18px">주소가 바뀌었거나, 아직 쓰지 않은 페이지입니다. 잘못 쓴 종이는 구겨서 던지면 됩니다.</p>
+        <a class="pill pill--plain" href="/">← 첫 장으로</a>
+      </div>
+      <PaperSlot class="detail__slot" label="404" title="이 장은 비어 있습니다" body="구겨서 던져 버리세요." foot="—" tilt="-4,12,-5" fold="ball" hint="눌러서 던져보세요" />
     </div>
   </section>
 </Base>

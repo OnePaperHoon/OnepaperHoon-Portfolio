@@ -12,7 +12,8 @@ interface Props {
   tilt?: string;
   /** 그림자 진하기 0~1. 하늘 위에서는 0. */
   shadow?: number;
-  fold?: "plane";
+  /** plane: 종이비행기로 접힘 · ball: 구겨져 뭉침. 둘 다 던질 수 있습니다. */
+  fold?: "plane" | "ball";
   /** 역광 세기 0~1. 해를 등진 자리일수록 반대쪽 면의 인쇄가 비칩니다. */
   backlit?: number;
   /** 종이가 살아 있을 때만 보이는 작은 안내 문구 */

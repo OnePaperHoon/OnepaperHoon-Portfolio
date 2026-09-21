@@ -15,6 +15,7 @@ const FRAG = `
 precision highp float;
 uniform vec2 uRes;
 uniform float uTime, uClouds, uStars, uSunSize, uSunDisc, uSeed;
+uniform float uMoon; // 달의 위상 0..1 (0 삭, 0.5 보름). 해일 때는 -1.
 uniform float uUnit; // 상자 높이 1 = 화면 높이의 몇 배인지. 해·구름·별의 크기는 상자가 아니라 화면 기준으로 잡습니다.
 uniform vec3 uC0, uC1, uC2, uC3, uSun, uCloud, uShade;
 uniform vec2 uSunPos;
@@ -55,10 +56,18 @@ void main() {
   // 해(또는 달)의 빛무리
   float d = distance(p, sunP);
   float glow = exp(-d * d / (uSunSize * uSunSize)) * 0.8 + exp(-d * 2.6) * 0.2;
+  if (uMoon >= 0.0) glow *= mix(0.3, 1.0, 0.5 - 0.5 * cos(6.2831853 * uMoon)); // 달빛은 찬 만큼만 밝습니다
   c = 1.0 - (1.0 - c) * (1.0 - uSun * clamp(glow, 0.0, 1.0));
   // 또렷한 원반 (달, 한낮의 해). 0이면 빛무리만 남습니다.
   float disc = uSunDisc > 0.0 ? smoothstep(uSunDisc, uSunDisc * 0.86, d) : 0.0;
-  c = mix(c, min(uSun * 1.25, vec3(1.0)), disc);
+  float moonLit = 1.0;
+  if (uMoon >= 0.0 && disc > 0.0) {
+    // 원반 위의 명암 경계: 가장자리 호를 cos(위상)만큼 눌러 만든 타원. 차오를 때는 오른쪽, 기울 때는 왼쪽이 밝습니다.
+    vec2 m = (p - sunP) / uSunDisc;
+    float edge = sqrt(max(0.0, 1.0 - m.y * m.y)) * cos(6.2831853 * uMoon);
+    moonLit = uMoon < 0.5 ? smoothstep(-0.07, 0.07, m.x - edge) : smoothstep(-0.07, 0.07, -edge - m.x);
+  }
+  c = mix(c, min(uSun * 1.25, vec3(1.0)), disc * mix(0.14, 1.0, moonLit));
 
   // 구름: 가로로 길게 늘인 fbm을 한 번 휘고, 해 쪽으로 한 걸음 옮긴 표본과의 차이로 밝은 면을 만듭니다
   vec2 q = p * vec2(1.5, 3.4) + vec2(uTime * 0.011 + uSeed, uSeed * 0.37);
@@ -77,7 +86,7 @@ void main() {
   gl_FragColor = vec4(c, 1.0);
 }`;
 
-type Palette = { colors: number[][]; sun: number[]; sunPos: [number, number]; sunSize: number; sunDisc: number; cloud: number[]; shade: number[]; clouds: number; stars: number };
+type Palette = { colors: number[][]; sun: number[]; sunPos: [number, number]; sunSize: number; sunDisc: number; moon: boolean; cloud: number[]; shade: number[]; clouds: number; stars: number };
 
 function hexToRgb(value: string): number[] {
   const hex = value.trim().replace("#", "");
@@ -95,11 +104,19 @@ function readPalette(el: HTMLElement): Palette {
     sunPos: [num("--sun-x", 50) / 100, num("--sun-y", 60) / 100],
     sunSize: num("--sun-size", 0.34),
     sunDisc: num("--sun-disc", 0),
+    moon: num("--moon", 0) > 0,
     cloud: hexToRgb(get("--cloud") || "#ffffff"),
     shade: hexToRgb(get("--cloud-shade") || "#b8a8e0"),
     clouds: num("--clouds", 0.6),
     stars: num("--stars", 0),
   };
+}
+
+/** 오늘 달의 위상 (0 삭 → 0.5 보름 → 1 삭). 2000-01-06 18:14 UTC의 삭을 기준으로 삭망월을 셉니다. */
+function moonPhase(date = new Date()) {
+  const synodic = 29.530588853;
+  const days = (date.getTime() - Date.UTC(2000, 0, 6, 18, 14)) / 86400000;
+  return ((days % synodic) + synodic) % synodic / synodic;
 }
 
 let rescan: (() => void) | null = null;
@@ -122,7 +139,10 @@ export function mountSky() {
   gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
   gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
   gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.warn("sky shader:", gl.getProgramInfoLog(program), gl.getShaderInfoLog(gl.getAttachedShaders(program)?.[1] as WebGLShader));
+    return; // CSS 그라데이션 폴백이 그대로 남습니다
+  }
   gl.useProgram(program);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -131,7 +151,7 @@ export function mountSky() {
   gl.vertexAttribPointer(attribute, 2, gl.FLOAT, false, 0, 0);
   const U = (name: string) => gl.getUniformLocation(program, name);
   const u = {
-    res: U("uRes"), time: U("uTime"), clouds: U("uClouds"), stars: U("uStars"), sunSize: U("uSunSize"), sunDisc: U("uSunDisc"), unit: U("uUnit"), seed: U("uSeed"),
+    res: U("uRes"), time: U("uTime"), clouds: U("uClouds"), stars: U("uStars"), sunSize: U("uSunSize"), sunDisc: U("uSunDisc"), moon: U("uMoon"), unit: U("uUnit"), seed: U("uSeed"),
     c: [U("uC0"), U("uC1"), U("uC2"), U("uC3")], sun: U("uSun"), cloud: U("uCloud"), shade: U("uShade"), sunPos: U("uSunPos"),
   };
 
@@ -143,6 +163,9 @@ export function mountSky() {
   };
   scan();
   rescan = scan;
+  const phase = moonPhase();
+  // 터미널의 `now` 명령: <html data-now>가 바뀐 뒤 팔레트를 다시 읽습니다.
+  document.addEventListener("sky:now", () => requestAnimationFrame(scan));
   document.addEventListener("astro:after-swap", () => { boxes = []; live = null; });
 
   let last = 0;
@@ -181,6 +204,7 @@ export function mountSky() {
     gl.uniform1f(u.stars, palette.stars);
     gl.uniform1f(u.sunSize, palette.sunSize);
     gl.uniform1f(u.sunDisc, palette.sunDisc);
+    gl.uniform1f(u.moon, palette.moon ? phase : -1);
     gl.uniform1f(u.unit, bestRect.height / window.innerHeight);
     gl.uniform1f(u.seed, best.seed);
     palette.colors.forEach((color, index) => gl.uniform3fv(u.c[index], color));

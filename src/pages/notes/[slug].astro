@@ -16,7 +16,7 @@ const { Content } = await render(entry);
 const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-", ".");
 ---
 
-<Base title={data.title} description={data.summary} type="article">
+<Base title={data.title} description={data.summary} image={`/og/notes/${entry.id}.png`} type="article">
   <div data-tone-zone="light">
     <header class="shell--narrow page-top note-head" style="padding-bottom:0">
       <time datetime={data.date.toISOString()}>{formatDate(data.date)}</time>

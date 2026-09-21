@@ -29,7 +29,7 @@ const { data } = entry;
 const { Content } = await render(entry);
 ---
 
-<Base title={data.title} description={data.summary} image={data.cover} type="article">
+<Base title={data.title} description={data.summary} image={`/og/work/${entry.id}.png`} type="article">
   <div data-tone-zone="light">
     <section class="shell page-top">
       <div class="detail__grid">

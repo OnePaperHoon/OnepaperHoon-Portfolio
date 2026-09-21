@@ -1,9 +1,10 @@
 ---
 import "@/styles/global.css";
 import { ClientRouter } from "astro:transitions";
+import { getCollection } from "astro:content";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import { site } from "@/site";
+import { site, statusLabel } from "@/site";
 
 interface Props {
   title?: string;
@@ -18,6 +19,16 @@ const pageTitle = title ? `${title} — ${site.name}` : site.title;
 const canonical = new URL(Astro.url.pathname, site.url).href;
 const ogImage = new URL(image, site.url).href;
 const verification = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION;
+// 터미널 모드가 읽는 작은 색인
+const works = (await getCollection("work", ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const siteIndex = {
+  author: site.author,
+  email: site.email,
+  github: site.github,
+  works: works.map(({ id, data }) => ({ id, title: data.title, kind: data.kind, status: statusLabel[data.status], summary: data.summary, paper: data.paper, links: data.links })),
+  notes: notes.map(({ id, data }) => ({ id, title: data.title, date: data.date.toISOString().slice(0, 10), summary: data.summary })),
+};
 const person = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -69,6 +80,7 @@ const person = {
         };
         apply();
         document.addEventListener("astro:after-swap", apply);
+        document.addEventListener("sky:now", apply);
       })();
     </script>
   </head>
@@ -78,12 +90,16 @@ const person = {
       <slot />
     </main>
     <Footer />
+    <script type="application/json" id="site-index" is:inline set:html={JSON.stringify(siteIndex)} />
+    <div id="term-root" transition:persist="term-root"></div>
     <!-- 종이 무대: 페이지를 이동해도 같은 캔버스가 유지됩니다 -->
     <div id="paper-root" transition:persist="paper-root" transition:name="paper-stage" aria-hidden="true"></div>
 
     <script>
       import { mountSky } from "@/scripts/sky";
       import { mountTerminals } from "@/scripts/terminal";
+      import { mountSound } from "@/scripts/sound";
+      import { mountConsole } from "@/scripts/console";
 
       // ClientRouter 아래에서 모듈 스크립트는 한 번만 실행되므로, 페이지마다 할 일은 astro:page-load에 겁니다.
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -103,6 +119,8 @@ const person = {
         document.querySelectorAll<HTMLElement>("[data-rise]").forEach((el) => observer?.observe(el));
 
         mountTerminals();
+        mountSound();
+        mountConsole();
 
         // 종이 무대와 셰이더 하늘: 동작 줄이기를 켠 환경에서는 CSS 종이 카드와 그라데이션으로 둡니다.
         if (!reduced.matches) {

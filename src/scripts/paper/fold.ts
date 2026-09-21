@@ -165,26 +165,51 @@ export function buildSheet(nx = 12, ny = 17): SheetMesh {
   return { flat, uv, mask, count };
 }
 
+/** 값 노이즈 (0..1). 구겨진 종이의 울퉁불퉁함에 씁니다. */
+function hash2(x: number, y: number) {
+  const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+function vnoise(x: number, y: number) {
+  const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+  const a = hash2(ix, iy), b = hash2(ix + 1, iy), c = hash2(ix, iy + 1), d = hash2(ix + 1, iy + 1);
+  return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+}
+
+export type Deform = {
+  /** 0..1 구겨서 뭉친 정도 */
+  crumple: number;
+  /** 손으로 잡은 지점(펼친 좌표)과, 거기서 멀어질수록 처지는 정도 */
+  bendX: number;
+  bendY: number;
+  bend: number;
+};
+
 /**
- * 펼친 좌표에서 시작해 파동과 접기를 적용한 위치·법선을 씁니다.
+ * 펼친 좌표에서 시작해 파동과 접기(또는 구기기)를 적용한 위치·법선을 씁니다.
  * @param stage 0..STAGES 사이의 접기 진행도. 정수마다 한 단계가 끝납니다.
  */
-export function deform(mesh: SheetMesh, positions: Float32Array, normals: Float32Array, time: number, wave: number, stage: number) {
+export function deform(mesh: SheetMesh, positions: Float32Array, normals: Float32Array, time: number, wave: number, stage: number, extra: Deform) {
   const prog = FOLDS.map((f) => {
     const t = Math.min(1, Math.max(0, stage - f.stage));
     return t * t * (3 - 2 * t);
   });
   const unfolded = 1 - Math.min(1, stage);
-  const amp = wave * unfolded;
+  const crumple = extra.crumple * extra.crumple * (3 - 2 * extra.crumple);
+  const amp = wave * unfolded * (1 - crumple);
+  const bend = extra.bend * unfolded * (1 - crumple);
 
   for (let v = 0; v < mesh.count; v++) {
     const fx = mesh.flat[v * 2], fy = mesh.flat[v * 2 + 1];
     // 느린 두 파동 + 아래쪽이 살짝 말리는 곡률
     const a1 = 1.7 * fx + 0.9 * fy + time * 0.9, a2 = 2.4 * fy - 0.6 * fx + time * 0.63;
     const curl = (fy / SHEET_H - 0.2) * (fy / SHEET_H - 0.2) * 0.35;
-    let x = fx, y = fy, z = amp * (0.55 * Math.sin(a1) + 0.45 * Math.sin(a2) + curl);
-    const dzdx = amp * (0.55 * 1.7 * Math.cos(a1) - 0.45 * 0.6 * Math.cos(a2));
-    const dzdy = amp * (0.55 * 0.9 * Math.cos(a1) + 0.45 * 2.4 * Math.cos(a2) + (0.7 * (fy / SHEET_H - 0.2)) / SHEET_H);
+    // 잡힌 지점에서 멀수록 뒤로 처집니다
+    const gx = fx - extra.bendX, gy = fy - extra.bendY;
+    let x = fx, y = fy, z = amp * (0.55 * Math.sin(a1) + 0.45 * Math.sin(a2) + curl) - bend * 0.5 * (gx * gx + gy * gy);
+    const dzdx = amp * (0.55 * 1.7 * Math.cos(a1) - 0.45 * 0.6 * Math.cos(a2)) - bend * gx;
+    const dzdy = amp * (0.55 * 0.9 * Math.cos(a1) + 0.45 * 2.4 * Math.cos(a2) + (0.7 * (fy / SHEET_H - 0.2)) / SHEET_H) - bend * gy;
     let nx = -dzdx, ny = -dzdy, nz = 1;
     // 접힐 때마다 쌓이는 순서가 뒤집힙니다: 새 층 = (2·단계+1) − 이전 층
     let layer = 0;
@@ -209,6 +234,16 @@ export function deform(mesh: SheetMesh, positions: Float32Array, normals: Float3
       ny = my;
       if (i < FLAT_FOLDS) layer += (2 * f.stage + 1 - 2 * layer) * t;
     }
+    if (crumple > 0) {
+      // 구기기: 종이를 울퉁불퉁한 공 표면으로 말아 넣습니다. 중간에는 제멋대로 구겨지는 구간이 있습니다.
+      const lon = (fx / SHEET_W) * Math.PI * 0.9, lat = (fy / SHEET_H) * Math.PI * 0.46;
+      const ridge = 1 - Math.abs(2 * vnoise(fx * 2.7 + 1.3, fy * 2.7) - 1);
+      const radius = 0.6 * (1 + 0.3 * (ridge - 0.5) + 0.14 * (vnoise(fx * 7.1, fy * 7.1 + 4.2) - 0.5));
+      const chaos = Math.sin(Math.PI * crumple) * 0.5 * (vnoise(fx * 4 + 9.1, fy * 4) - 0.5);
+      x += (radius * Math.cos(lat) * Math.sin(lon) - x) * crumple;
+      y += (radius * Math.sin(lat) - y) * crumple;
+      z += (radius * Math.cos(lat) * Math.cos(lon) - z) * crumple + chaos;
+    }
     const len = Math.hypot(nx, ny, nz) || 1;
     positions[v * 3] = x;
     positions[v * 3 + 1] = y;
@@ -216,5 +251,22 @@ export function deform(mesh: SheetMesh, positions: Float32Array, normals: Float3
     normals[v * 3] = nx / len;
     normals[v * 3 + 1] = ny / len;
     normals[v * 3 + 2] = nz / len;
+  }
+
+  // 구겨진 종이는 면마다 각이 져 보여야 하므로 삼각형 단위 법선으로 바꿉니다.
+  if (crumple > 0.001) {
+    for (let t = 0; t < mesh.count; t += 3) {
+      const a = t * 3, b = a + 3, c = a + 6;
+      const ux = positions[b] - positions[a], uy = positions[b + 1] - positions[a + 1], uz = positions[b + 2] - positions[a + 2];
+      const vx = positions[c] - positions[a], vy = positions[c + 1] - positions[a + 1], vz = positions[c + 2] - positions[a + 2];
+      let fx = uy * vz - uz * vy, fy = uz * vx - ux * vz, fz = ux * vy - uy * vx;
+      const fl = Math.hypot(fx, fy, fz) || 1;
+      fx /= fl; fy /= fl; fz /= fl;
+      for (let k = a; k <= c; k += 3) {
+        normals[k] += (fx - normals[k]) * crumple;
+        normals[k + 1] += (fy - normals[k + 1]) * crumple;
+        normals[k + 2] += (fz - normals[k + 2]) * crumple;
+      }
+    }
   }
 }
