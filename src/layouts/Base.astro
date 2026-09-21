@@ -55,6 +55,22 @@ const person = {
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@800;900&family=JetBrains+Mono:wght@400;500&display=swap" />
     <script type="application/ld+json" is:inline set:html={JSON.stringify(person)} />
     <ClientRouter />
+    <script is:inline>
+      // 방문자의 지금 시각 → 첫 장면의 시간대. 그리기 전에 정해야 깜빡이지 않습니다. (?now=night 로 미리보기)
+      (() => {
+        const phases = ["dawn", "day", "dusk", "night"];
+        const apply = () => {
+          let asked = new URLSearchParams(location.search).get("now");
+          // 미리보기는 페이지를 옮겨 다녀도 이 탭에서 유지됩니다.
+          try { if (phases.includes(asked)) sessionStorage.setItem("now", asked); else asked = sessionStorage.getItem("now"); } catch {}
+          const hour = new Date().getHours();
+          const now = hour >= 5 && hour < 9 ? "dawn" : hour >= 9 && hour < 17 ? "day" : hour >= 17 && hour < 20 ? "dusk" : "night";
+          document.documentElement.dataset.now = phases.includes(asked) ? asked : now;
+        };
+        apply();
+        document.addEventListener("astro:after-swap", apply);
+      })();
+    </script>
   </head>
   <body>
     <Header />
@@ -63,9 +79,13 @@ const person = {
     </main>
     <Footer />
     <!-- 종이 무대: 페이지를 이동해도 같은 캔버스가 유지됩니다 -->
+    <div id="sky-root" transition:persist="sky-root" aria-hidden="true"></div>
     <div id="paper-root" transition:persist="paper-root" transition:name="paper-stage" aria-hidden="true"></div>
 
     <script>
+      import { mountSky } from "@/scripts/sky";
+      import { mountTerminals } from "@/scripts/terminal";
+
       // ClientRouter 아래에서 모듈 스크립트는 한 번만 실행되므로, 페이지마다 할 일은 astro:page-load에 겁니다.
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
       let observer: IntersectionObserver | undefined;
@@ -83,8 +103,13 @@ const person = {
         );
         document.querySelectorAll<HTMLElement>("[data-rise]").forEach((el) => observer?.observe(el));
 
-        // 종이 무대: 동작 줄이기를 켠 환경에서는 CSS 종이 카드로 둡니다.
-        if (!reduced.matches) import("@/scripts/paper/stage").then(({ mountPaper }) => mountPaper()).catch(() => undefined);
+        mountTerminals();
+
+        // 종이 무대와 셰이더 하늘: 동작 줄이기를 켠 환경에서는 CSS 종이 카드와 그라데이션으로 둡니다.
+        if (!reduced.matches) {
+          mountSky();
+          import("@/scripts/paper/stage").then(({ mountPaper }) => mountPaper()).catch(() => undefined);
+        }
       });
     </script>
   </body>

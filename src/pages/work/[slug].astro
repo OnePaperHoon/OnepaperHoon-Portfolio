@@ -58,7 +58,7 @@ const { Content } = await render(entry);
             <div class="browser__bar"><i></i><i></i><i></i><span>{data.links.live?.replace("https://", "")}</span></div>
             <img src={data.cover} alt={`${data.title} 실제 화면`} />
           </div>
-        ) : data.terminal && <pre class="terminal-cover" style={`--tint:${data.tint}`}>{data.terminal.join("\n")}</pre>}
+        ) : data.terminal && <pre class="terminal-cover" style={`--tint:${data.tint}`} data-typed>{data.terminal.join("\n")}</pre>}
       </div>
     </section>
 

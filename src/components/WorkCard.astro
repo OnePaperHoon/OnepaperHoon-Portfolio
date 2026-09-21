@@ -28,7 +28,7 @@ const foot = `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2
     <span class="card__kind">{kind}</span>
   </div>
   {cover && <div class="card__shot"><img src={cover} alt="" loading="lazy" decoding="async" /></div>}
-  {!cover && terminal && <pre class="card__terminal" aria-hidden="true">{terminal.join("\n")}</pre>}
+  {!cover && terminal && <pre class="card__terminal" aria-hidden="true" data-typed>{terminal.join("\n")}</pre>}
   <div class="card__foot">
     <span class="badge" data-status={status}><i></i>{statusLabel[status]}</span>
     <span class="pill pill--light">자세히</span>

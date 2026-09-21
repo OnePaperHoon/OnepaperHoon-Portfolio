@@ -21,9 +21,9 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
       <span class="wordmark"><i>one</i><b>paper</b><i>hoon</i></span>
     </div>
   </div>
-  <section class="scene scene--dawn" data-tone-zone="dark">
+  <section class="scene" data-step="0" data-tone-zone="dark">
     <div class="scene__grain" aria-hidden="true"></div>
-    <div class="hero">
+    <div class="hero sky" data-sky>
       <div class="clouds" aria-hidden="true"><i class="cloud cloud--a"></i><i class="cloud cloud--b"></i><i class="cloud cloud--c"></i></div>
       <div class="shell hero__words">
         <p class="hero__hello">안녕하세요, 한장훈입니다</p>
@@ -93,13 +93,13 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
   </section>
 
   {featured && (
-    <section class="scene scene--day feature" data-tone-zone="light">
+    <section class="scene sky feature" data-step="1" data-sky data-tone-zone="dark">
       <div class="scene__grain" aria-hidden="true"></div>
       <div class="shell">
         <p class="feature__name" data-rise>{featured.data.title}</p>
         <h2 class="headline" data-rise style="--i:1">오늘의 흐름부터,<br />믿을 만한 원문까지.</h2>
         <p class="lede" data-rise style="--i:2">{featured.data.summary}</p>
-        <a class="pill" href={`/work/${featured.id}`} data-rise style="--i:3">자세히 보기</a>
+        <a class="pill pill--light" href={`/work/${featured.id}`} data-rise style="--i:3">자세히 보기</a>
         <div class="feature__stage" data-rise>
           <div class="browser">
             <div class="browser__bar"><i></i><i></i><i></i><span>{featured.data.links.live?.replace("https://", "")}</span></div>

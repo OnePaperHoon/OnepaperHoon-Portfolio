@@ -143,7 +143,8 @@ export async function mountPaper() {
   trail.frustumCulled = false;
   trail.renderOrder = -2;
   scene.add(trail);
-  let trailDots: { x: number; y: number; born: number }[] = [];
+  // 점은 하늘에 찍힌 것이므로 페이지와 함께 스크롤됩니다: 찍힌 순간의 scrollY를 같이 기억합니다.
+  let trailDots: { x: number; y: number; born: number; scroll: number }[] = [];
 
   const print = (faceIndex: number, content: SheetContent) => {
     drawSheet(textures[faceIndex].image as HTMLCanvasElement, content);
@@ -438,11 +439,12 @@ export async function mountPaper() {
     if ((intro < 1 || mode === "flying") && folded > 0.5) {
       const tailX = state.x - Math.cos(state.heading) * state.scale * 1.15, tailY = state.y - Math.sin(state.heading) * state.scale * 1.15;
       const lastDot = trailDots[trailDots.length - 1];
-      if (!lastDot || Math.hypot(tailX - lastDot.x, tailY - lastDot.y) > 0.17) trailDots.push({ x: tailX, y: tailY, born: time });
+      const drift = lastDot ? (window.scrollY - lastDot.scroll) * worldPerPx : 0;
+      if (!lastDot || Math.hypot(tailX - lastDot.x, tailY - lastDot.y - drift) > 0.17) trailDots.push({ x: tailX, y: tailY, born: time, scroll: window.scrollY });
     }
     trailDots = trailDots.filter((dot) => time - dot.born < TRAIL_LIFE).slice(-TRAIL_MAX);
     trailDots.forEach((dot, n) => {
-      trailPositions.set([dot.x, dot.y, -0.4], n * 3);
+      trailPositions.set([dot.x, dot.y + (window.scrollY - dot.scroll) * worldPerPx, -0.4], n * 3);
       trailColors.set([1, 1, 1, 0.9 * (1 - (time - dot.born) / TRAIL_LIFE) ** 1.5], n * 4);
     });
     trailGeometry.setDrawRange(0, trailDots.length);
