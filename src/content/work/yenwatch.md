@@ -17,6 +17,7 @@ terminal:
   - "/yen-alert 940 아래로"
   - "→ 목표가 도달 시 한 번만 멘션"
 tint: "#1d2a4a"
+demo: yen-board
 order: 3
 ---
 

@@ -31,6 +31,8 @@ const work = defineCollection({
     terminal: z.array(z.string()).optional(),
     /** 카드 배경색 (커버가 터미널일 때). */
     tint: z.string().default("#1b1a2e"),
+    /** 상세 페이지에 넣을 만져볼 수 있는 데모 (src/components/Demo.astro) */
+    demo: z.enum(["cca-init", "cda-init", "yen-board", "roulette"]).optional(),
     order: z.number().default(99),
     featured: z.boolean().default(false),
     draft: z.boolean().default(false),

@@ -11,6 +11,7 @@ links:
   live: https://rouletteside.com
 cover: /covers/roulette-side.jpg
 tint: "#1c1712"
+demo: roulette
 order: 2
 ---
 

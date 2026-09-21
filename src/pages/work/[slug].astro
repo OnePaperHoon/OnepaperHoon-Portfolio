@@ -2,6 +2,7 @@
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import Base from "@/layouts/Base.astro";
 import PaperSlot from "@/components/PaperSlot.astro";
+import Demo from "@/components/Demo.astro";
 import { statusLabel } from "@/site";
 
 export async function getStaticPaths() {
@@ -61,6 +62,8 @@ const { Content } = await render(entry);
         ) : data.terminal && <pre class="terminal-cover" style={`--tint:${data.tint}`} data-typed>{data.terminal.join("\n")}</pre>}
       </div>
     </section>
+
+    {data.demo && <div class="shell"><Demo name={data.demo} live={data.links.live} /></div>}
 
     <article class="shell--narrow prose"><Content /></article>
 

@@ -19,6 +19,7 @@ terminal:
   - "? 기존 hook 발견    Append / Skip / Abort"
   - "✓ settings.json 백업 완료"
 tint: "#3a2418"
+demo: cca-init
 order: 4
 ---
 

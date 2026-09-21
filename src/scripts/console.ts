@@ -10,12 +10,13 @@ type Note = { id: string; title: string; date: string; summary: string };
 type Index = { author: string; email: string; github: string; works: Work[]; notes: Note[] };
 
 const PHASES = ["dawn", "day", "dusk", "night"];
-const COMMANDS = ["help", "ls", "open", "cat", "throw", "now", "whoami", "contact", "github", "clear", "exit"];
+const COMMANDS = ["help", "ls", "open", "cat", "throw", "pen", "now", "whoami", "contact", "github", "clear", "exit"];
 const HELP = [
   "ls [work|notes]      목록",
   "open <이름>          그 작업·노트로 이동   (open feedline)",
   "cat <이름>           요약과 원칙 한 줄",
   "throw                지금 접혀 있는 종이를 날리기",
+  "pen <on|off>         종이에 마우스로 낙서하기",
   "now <dawn|day|dusk|night|auto>   하늘의 시간대",
   "whoami · contact · github",
   "clear · exit         (Esc로도 닫힙니다)",
@@ -97,6 +98,11 @@ function run(raw: string) {
       if (!answered) line("종이가 아직 준비되지 않았습니다.", "err");
       return;
     }
+    case "pen": {
+      if (arg !== "on" && arg !== "off") return line("pen: on | off", "err");
+      document.dispatchEvent(new CustomEvent("paper:pen", { detail: { on: arg === "on" } }));
+      return line(arg === "on" ? "펜을 들었습니다. 터미널을 닫고 종이 위에 그려 보세요." : "펜을 내려놓았습니다.");
+    }
     case "now": {
       if (![...PHASES, "auto"].includes(arg)) return line("now: dawn | day | dusk | night | auto", "err");
       try { arg === "auto" ? sessionStorage.removeItem("now") : sessionStorage.setItem("now", arg); } catch { /* 무시 */ }
@@ -130,7 +136,7 @@ function complete(value: string) {
   const site = readIndex();
   if (parts.length <= 1) return COMMANDS.filter((c) => c.startsWith(parts[0] ?? ""));
   const pool = ["open", "cd", "cat"].includes(parts[0]) ? [...site.works.map((w) => w.id), ...site.notes.map((n) => n.id)]
-    : parts[0] === "now" ? [...PHASES, "auto"] : parts[0] === "ls" ? ["work", "notes"] : [];
+    : parts[0] === "now" ? [...PHASES, "auto"] : parts[0] === "ls" ? ["work", "notes"] : parts[0] === "pen" ? ["on", "off"] : [];
   return pool.filter((c) => c.startsWith(parts[1] ?? "")).map((c) => `${parts[0]} ${c}`);
 }
 

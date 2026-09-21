@@ -55,6 +55,11 @@ featured: false # true 면 홈의 대표 작업 자리에 들어갑니다 (cover
 
 필드 설명과 검증 규칙은 `src/content.config.ts`에 있습니다. 필드를 빠뜨리면 빌드가 어떤 파일의 무엇이 틀렸는지 알려줍니다.
 
+### 만져볼 수 있는 데모
+
+작업 frontmatter에 `demo: cca-init | cda-init | yen-board | roulette`를 주면 상세 페이지에 "직접 해보기" 상자가 들어갑니다.
+데모의 내용과 동작은 `src/scripts/demos.ts`, 상자와 설명 문구는 `src/components/Demo.astro`에 있습니다. 새 데모를 만들면 `src/content.config.ts`의 `demo` enum에도 이름을 추가하세요. 데모는 README에 적힌 동작을 재현한 것이고 실제 도구를 실행하지 않습니다 — 도구의 동작이 바뀌면 여기도 같이 고쳐야 합니다.
+
 ## 노트(Notes) 쓰기
 
 `src/content/notes/<slug>.md`:
@@ -97,6 +102,8 @@ draft: false # true 면 어디에도 노출되지 않습니다
 ## 터미널 모드 · 달 · 공유 이미지
 
 - **터미널 모드** (`src/scripts/console.ts`): `` ` `` 키나 헤더의 `>_` 버튼으로 엽니다. `help`, `ls`, `open <이름>`, `cat <이름>`, `throw`, `now <시간대>` … 목록은 Base.astro가 심는 `#site-index` JSON에서 읽으므로 작업·노트를 추가하면 자동으로 들어갑니다. 명령을 늘리려면 `run()`의 `switch`에 한 줄 추가.
+- **낙서**: 헤더의 연필 버튼(또는 터미널의 `pen on`)을 켜면 펼친 종이 위에 마우스로 그릴 수 있습니다. 종이의 인쇄면이 2D 캔버스라 그 위에 바로 긋고, 그 면이 다시 인쇄될 때 지워집니다. 맨 아래로 가면 낙서한 채로 접혀 날아갑니다.
+- **FeedLine 라이브 상태** (`src/lib/feedline.ts`): 홈의 "지금 돌아가는 것" 종이와 Always on 목록에 FeedLine의 실제 숫자(정상 소스 / 전체)가 찍힙니다. 지금은 **빌드할 때** `https://feedline.kr/api/briefing`에서 받아 "배포 시점 기준"으로 심습니다 (FeedLine이 내려가 있어도 빌드는 계속되고 숫자만 빠집니다). 방문 시점의 값으로 바꾸려면 FeedLine에 CORS를 허용하는 가벼운 공개 주소(`/api/public-status` → `{ sourceCount, totalSourceCount, healthCheckedAt }`, `Access-Control-Allow-Origin: https://onepaperhoon.com`)를 추가한 뒤 `FEEDLINE_BROWSER_FETCH`를 `true`로 바꾸세요.
 - **달**: 밤하늘의 달은 오늘 실제 위상대로 그려집니다 (`sky.ts`의 `moonPhase`, 외부 API 없음).
 - **공유 이미지** (`src/pages/og/[kind]/[slug].png.ts`): 작업·노트마다 "그 글의 한 줄이 적힌 종이 한 장" PNG를 빌드할 때 만듭니다 (satori + resvg, 글꼴은 `src/assets/fonts`의 Pretendard). 새 글을 추가하면 자동으로 생기고, 글 하나당 빌드가 1초쯤 늘어납니다. 홈은 `public/og.jpg`.
 

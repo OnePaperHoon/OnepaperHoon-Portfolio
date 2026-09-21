@@ -99,6 +99,8 @@ const person = {
       import { mountSky } from "@/scripts/sky";
       import { mountTerminals } from "@/scripts/terminal";
       import { mountConsole } from "@/scripts/console";
+      import { mountDemos } from "@/scripts/demos";
+      import { mountLiveStatus } from "@/scripts/live-status";
 
       // ClientRouter 아래에서 모듈 스크립트는 한 번만 실행되므로, 페이지마다 할 일은 astro:page-load에 겁니다.
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -119,6 +121,8 @@ const person = {
 
         mountTerminals();
         mountConsole();
+        mountDemos();
+        void mountLiveStatus();
 
         // 종이 무대와 셰이더 하늘: 동작 줄이기를 켠 환경에서는 CSS 종이 카드와 그라데이션으로 둡니다.
         if (!reduced.matches) {

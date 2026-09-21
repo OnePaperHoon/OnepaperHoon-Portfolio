@@ -19,6 +19,7 @@ terminal:
   - ""
   - "! codex 에서 /hooks → trust 를 잊지 마세요"
 tint: "#16302b"
+demo: cda-init
 order: 5
 ---
 

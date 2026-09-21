@@ -5,6 +5,7 @@
  *  - 내용: 슬롯(또는 hover 중인 [data-paper-hover] 요소)의 data-* 문구를 안 보이는 면에 인쇄한 뒤 뒤집어 보여줍니다.
  *  - 모양: data-fold="plane" 슬롯에서는 종이비행기로 접히고, data-fold="ball" 슬롯에서는 구겨져 뭉칩니다. 둘 다 던질 수 있습니다.
  *  - 만지기: 펼친 종이는 어디서든 마우스로 잡아 끌 수 있고(잡힌 곳에서 휩니다), 가까이서 마우스를 휘두르면 바람에 밀립니다.
+ *  - 낙서: 펜 모드([data-pen-toggle])에서는 잡는 대신 종이에 그려집니다. 인쇄면이 2D 캔버스라 그 위에 바로 긋습니다.
  *  - 페이지 이동: 무대는 ClientRouter 사이에도 살아 있습니다. 이동할 때 종이가 화면을 덮을 만큼 커져 다음 페이지가 되고,
  *    새 페이지에서 다시 작아지며 제자리로 내려앉습니다.
  */
@@ -191,7 +192,7 @@ export async function mountPaper() {
     if (Math.abs(facing) < 1e-4) return null;
     const distance = hitPoint.copy(paper.position).sub(camera.position).dot(normal) / facing;
     hitPoint.copy(ray).multiplyScalar(distance).add(camera.position).sub(paper.position).applyQuaternion(inverse.copy(paper.quaternion).invert()).divideScalar(paper.scale.x || 1);
-    return Math.abs(hitPoint.x) <= SHEET_W && Math.abs(hitPoint.y) <= SHEET_H ? { x: hitPoint.x, y: hitPoint.y } : null;
+    return Math.abs(hitPoint.x) <= SHEET_W && Math.abs(hitPoint.y) <= SHEET_H ? { x: hitPoint.x, y: hitPoint.y, front: facing < 0 } : null;
   };
 
   // ---------- 페이지의 슬롯 ----------
@@ -214,6 +215,7 @@ export async function mountPaper() {
     }
     slots = next;
     if (covering) { covering = false; landing = 1; }
+    syncPen();
   };
   document.addEventListener("astro:after-swap", () => {
     slots = [];
@@ -221,6 +223,7 @@ export async function mountPaper() {
     if (canvas.isConnected) document.documentElement.classList.add("has-paper");
   });
   rescanPage = () => void scan();
+  document.addEventListener("paper:rescan", () => void scan()); // 슬롯 문구가 바뀌었을 때 (라이브 상태)
 
   // ---------- 페이지 이동: 종이가 화면을 덮는 동안 다음 페이지를 불러옵니다 ----------
   let covering = false;
@@ -266,7 +269,10 @@ export async function mountPaper() {
       pointer.vy = mix(pointer.vy, (world.y - pointer.wy) / span, 0.45);
     }
     Object.assign(pointer, { clientX: event.clientX, clientY: event.clientY, wx: world.x, wy: world.y, at: now, x: (event.clientX / viewW) * 2 - 1, y: (event.clientY / viewH) * 2 - 1 });
-    if (mode === "drag") {
+    if (mode === "draw") {
+      const hit = hitPaper(event.clientX, event.clientY);
+      if (hit) ink(toInk(hit)); else penAt = null; // 종이 밖으로 나가면 선을 끊습니다
+    } else if (mode === "drag") {
       samples.push({ ...world, at: now });
       if (samples.length > 8) samples.shift();
     } else {
@@ -274,8 +280,47 @@ export async function mountPaper() {
     }
   }, { passive: true });
 
+  // ---------- 낙서 ----------
+  let penMode = false;
+  let penAt: { x: number; y: number; face: number } | null = null;
+  const syncPen = () => {
+    document.documentElement.classList.toggle("pen-on", penMode);
+    for (const button of document.querySelectorAll<HTMLElement>("[data-pen-toggle]")) button.setAttribute("aria-pressed", String(penMode));
+  };
+  const setPen = (on: boolean) => {
+    penMode = on;
+    syncPen();
+    document.querySelector(".pen-hint")?.remove();
+    if (!on) return;
+    const hint = document.createElement("p");
+    hint.className = "pen-hint";
+    hint.textContent = "종이 위에 마우스로 그려 보세요 — 맨 아래로 가면 그대로 접혀 날릴 수 있습니다";
+    document.body.append(hint);
+    setTimeout(() => hint.remove(), 4200);
+  };
+  document.addEventListener("paper:pen", (event) => setPen(Boolean((event as CustomEvent<{ on?: boolean }>).detail?.on)));
+  /** 종이 좌표 → 그 면의 캔버스 좌표. 뒷면 텍스처는 거울상으로 붙어 있으므로 가로를 뒤집습니다. */
+  const toInk = (hit: { x: number; y: number; front: boolean }) => {
+    const face = hit.front ? 0 : 1, image = textures[face].image as HTMLCanvasElement;
+    const u = (hit.x + SHEET_W) / (2 * SHEET_W), v = (hit.y + SHEET_H) / (2 * SHEET_H);
+    return { x: (face === 0 ? u : 1 - u) * image.width, y: (1 - v) * image.height, face };
+  };
+  const ink = (to: { x: number; y: number; face: number }) => {
+    const from = penAt && penAt.face === to.face ? penAt : to;
+    const ctx = (textures[to.face].image as HTMLCanvasElement).getContext("2d")!;
+    ctx.strokeStyle = "#2b3fd0";
+    ctx.lineWidth = 5.5;
+    ctx.lineCap = ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x + 0.01, to.y + 0.01);
+    ctx.stroke();
+    textures[to.face].needsUpdate = true;
+    penAt = to;
+  };
+
   // ---------- 던지기와 잡기 ----------
-  type Mode = "idle" | "drag" | "flying" | "gone";
+  type Mode = "idle" | "drag" | "draw" | "flying" | "gone";
   let mode: Mode = "idle";
   let dragKind: "throw" | "hold" = "throw";
   let grab = { x: 0, y: 0 };
@@ -300,6 +345,13 @@ export async function mountPaper() {
   document.addEventListener("pointerdown", (event) => {
     if (event.pointerType === "touch" || mode !== "idle" || covering) return;
     const grabbed = throwSlot(event) && throwable() ? null : canGrab(event);
+    if (penMode && grabbed) {
+      mode = "draw";
+      penAt = null;
+      ink(toInk(grabbed));
+      event.preventDefault();
+      return;
+    }
     if (!(throwSlot(event) && throwable()) && !grabbed) return;
     mode = "drag";
     dragKind = grabbed ? "hold" : "throw";
@@ -310,6 +362,7 @@ export async function mountPaper() {
     event.preventDefault();
   });
   window.addEventListener("pointerup", (event) => {
+    if (mode === "draw") { mode = "idle"; penAt = null; return; }
     if (mode !== "drag") return;
     mode = "idle";
     document.documentElement.classList.remove("paper-grabbing");
@@ -331,6 +384,7 @@ export async function mountPaper() {
   document.addEventListener("click", (event) => {
     const target = event.target as Element | null;
     if (target?.closest?.("[data-paper-launch]")) return void launch();
+    if (target?.closest?.("[data-pen-toggle]")) return setPen(!penMode);
     // 터치와 키보드는 누르기만 해도 날아갑니다 (마우스는 pointerup에서 처리).
     if (throwSlot(event) && (event.detail === 0 || (event as PointerEvent).pointerType === "touch")) launch();
   });
@@ -386,7 +440,7 @@ export async function mountPaper() {
       lastTarget = {
         x: clamp(mix(mix(pa.x, pb.x, te), laneX, transit * 0.9), -halfW * 0.92, halfW * 0.92),
         y,
-        scale: mix(pa.scale, pb.scale, te) * (1 - 0.55 * smooth((away - 0.25) / 0.9)) * (1 - 0.5 * transit),
+        scale: mix(pa.scale, pb.scale, te) * (1 - 0.68 * smooth((away - 0.08) / 0.6)) * (1 - 0.5 * transit),
         stage: mix(a.slot.shape === "plane" ? 1 : 0, b.slot.shape === "plane" ? 1 : 0, te) * STAGES,
         crumple: mix(a.slot.shape === "ball" ? 1 : 0, b.slot.shape === "ball" ? 1 : 0, te),
         tilt: [0, 1, 2].map((n) => mix(a.slot.tilt[n], b.slot.tilt[n], te)),
@@ -489,7 +543,7 @@ export async function mountPaper() {
     const decay = Math.exp(-dt * 9);
     pointer.vx *= decay;
     pointer.vy *= decay;
-    if (mode === "idle" && !covering && pointer.clientX >= 0) {
+    if (mode === "idle" && !covering && !penMode && pointer.clientX >= 0) {
       const reachOf = 2.6 * state.scale, away = Math.hypot(pointer.wx - state.x, pointer.wy - state.y), speed = Math.hypot(pointer.vx, pointer.vy);
       if (away < reachOf && speed > 2.5) {
         const push = (1 - away / reachOf) * dt * 0.42;
@@ -507,8 +561,9 @@ export async function mountPaper() {
     const dragSpeed = mode === "drag" && dragKind === "hold" ? Math.hypot(pointer.vx, pointer.vy) : 0;
     state.bend = mix(state.bend, mode === "drag" && dragKind === "hold" ? clamp(0.12 + dragSpeed * 0.03, 0, 0.42) : 0, 1 - Math.exp(-dt * 7));
     const sway = smooth(flutter / 0.6);
-    state.tx = mix(state.tx, (lastTarget.tilt[0] + pointer.y * 0.1) * calm, kSlow);
-    state.ty = mix(state.ty, (lastTarget.tilt[1] + pointer.x * 0.16) * calm, kSlow);
+    const follow = mode === "draw" || penMode ? 0 : 1; // 펜을 든 동안에는 마우스를 따라 기울지 않습니다
+    state.tx = mix(state.tx, (lastTarget.tilt[0] + pointer.y * 0.1 * follow) * calm, kSlow);
+    state.ty = mix(state.ty, (lastTarget.tilt[1] + pointer.x * 0.16 * follow) * calm, kSlow);
     state.tz = mix(state.tz, lastTarget.tilt[2] * calm, covering ? k : kSlow);
     state.flip = mix(state.flip, flipCount * Math.PI, first ? 1 : 1 - Math.exp(-dt * 4.2));
     state.shadow = mix(state.shadow, mode === "idle" ? lastTarget.shadow * (1 - sway) * calm * (1 - blank.value) : 0, mode === "idle" ? kSlow : 1 - Math.exp(-dt * 18)); // 던지면 그림자는 바로 사라집니다
