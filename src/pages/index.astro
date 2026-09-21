@@ -1,0 +1,148 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import PaperSlot from "@/components/PaperSlot.astro";
+import WorkCard from "@/components/WorkCard.astro";
+
+const works = (await getCollection("work", ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const featured = works.find((work) => work.data.featured && work.data.cover);
+const live = works.filter((work) => work.data.status === "live");
+const packages = works.filter((work) => work.data.links.npm);
+const stack = [...new Set(works.flatMap((work) => work.data.stack))].slice(0, 10);
+const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-", ".");
+---
+
+<Base flyIn>
+  <section class="scene scene--dawn" data-tone-zone="dark">
+    <div class="scene__grain" aria-hidden="true"></div>
+    <div class="hero">
+      <div class="clouds" aria-hidden="true"><i class="cloud cloud--a"></i><i class="cloud cloud--b"></i><i class="cloud cloud--c"></i></div>
+      <div class="shell hero__words">
+        <p class="hero__hello">안녕하세요, 한장훈입니다</p>
+        <h1 class="wordmark">onepaperhoon</h1>
+        <p class="hero__tagline">한 장에서 시작해,<br />매일 돌아가는 서비스로.</p>
+      </div>
+      <PaperSlot class="hero__slot" label="One paper" title="한 장" body={"한장훈 → 한 장 → one paper.\n작업을 한 장씩 넘겨 보세요."} foot="00" tilt="-10,18,-7" shadow={0} />
+      <ul class="hero__made" aria-label="만든 것들">
+        {works.map((work) => <li><a href={`/work/${work.id}`}>{work.data.title}</a></li>)}
+      </ul>
+      <div class="hills" aria-hidden="true">
+        <svg viewBox="0 0 1440 380" preserveAspectRatio="none"><path fill="var(--hill-1)" d="M0 210C150 150 290 120 430 150s250 96 420 70 290-120 420-110 120 40 170 60v210H0z" /></svg>
+        <svg viewBox="0 0 1440 380" preserveAspectRatio="none"><path fill="var(--hill-2)" d="M0 290c120-50 260-90 420-60s240 80 400 66 260-96 400-90 160 40 220 66v108H0z" /></svg>
+        <svg viewBox="0 0 1440 380" preserveAspectRatio="none"><path fill="var(--hill-3)" d="M0 340c180-30 320-54 520-36s300 40 480 26 300-50 440-40v90H0z" /></svg>
+      </div>
+    </div>
+
+    <div class="statement">
+      <div class="shell statement__grid">
+        <p class="statement__copy" data-rise>
+          <strong>흩어진 정보와 끝없는 기다림을,</strong><br />
+          믿을 수 있는 상태와 조용한 신호로 바꿉니다. 직접 기획하고, 만들고, 매일 운영합니다.
+        </p>
+        <PaperSlot class="statement__slot" label="What I do" title="조용한 신호를 만드는 사람" body="서비스 · 자동화 · 개발자 도구" foot="01" tilt="6,-16,5" shadow={0.35} />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" data-tone-zone="light">
+    <div class="shell numbers__grid">
+      <div>
+        <h2 class="headline headline--center" data-rise>숫자는 있는 그대로.</h2>
+        <div class="stats">
+          <div class="stat" data-rise style="--i:1"><span class="stat__value">{works.length}</span><span class="stat__label">만들어서 공개한 것</span></div>
+          <div class="stat" data-rise style="--i:2"><span class="stat__value">{live.length}</span><span class="stat__label">지금 돌아가는 서비스</span></div>
+          <div class="stat" data-rise style="--i:3"><span class="stat__value">{packages.length}</span><span class="stat__label">npm에 올린 패키지</span></div>
+        </div>
+        <p class="numbers__note headline--center" data-rise>크게 부풀릴 숫자는 없습니다. 대신 <strong>전부 실제로 돌아갑니다.</strong></p>
+      </div>
+      <PaperSlot class="numbers__slot" label="Now running" title="지금 돌아가는 것" body={live.map((work) => `· ${work.data.title}`).join("\n")} foot="02" tilt="-5,14,4" />
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0" data-tone-zone="light">
+    <div class="shell bento">
+      <article class="cell cell--wide" data-rise>
+        <p class="cell__label">One-person lab</p>
+        <h3 class="cell__title">기획부터 운영까지, <strong>혼자서 끝까지</strong> 가져갑니다.</h3>
+        <p class="cell__text">필요해서 만들고, 만든 것은 직접 씁니다. 그래서 설치 과정, 장애 복구, 끄는 방법까지 챙깁니다.</p>
+        <ul class="chips">{stack.map((item) => <li>{item}</li>)}</ul>
+      </article>
+      <article class="cell cell--tall" data-rise style="--i:1">
+        <h3 class="cell__title cell__title--accent">한 장에<br />적고,<br />만든다.</h3>
+        <p class="cell__text">문제와 원칙이 종이 한 장에 정리되지 않으면 아직 만들 때가 아닙니다.</p>
+      </article>
+      <article class="cell cell--tall cell--paper" data-rise>
+        <PaperSlot label="Principle" title="필요한 순간에만 말을 거는 도구" body="알림은 적게, 상태는 항상 최신으로." foot="03" tilt="4,-12,-5" shadow={0.5} />
+      </article>
+      <article class="cell cell--wide" data-rise style="--i:1">
+        <p class="cell__label">Always on</p>
+        <h3 class="cell__title">지금 이 순간에도 <strong>돌아가고 있는 것들.</strong></h3>
+        <ul class="now-list">
+          {live.map((work) => <li><i></i><strong>{work.data.title}</strong><span>{work.data.kind}</span></li>)}
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  {featured && (
+    <section class="scene scene--day feature" data-tone-zone="light">
+      <div class="scene__grain" aria-hidden="true"></div>
+      <div class="shell">
+        <p class="feature__name" data-rise>{featured.data.title}</p>
+        <h2 class="headline" data-rise style="--i:1">오늘의 흐름부터,<br />믿을 만한 원문까지.</h2>
+        <p class="lede" data-rise style="--i:2">{featured.data.summary}</p>
+        <a class="pill" href={`/work/${featured.id}`} data-rise style="--i:3">자세히 보기</a>
+        <div class="feature__stage" data-rise>
+          <div class="browser">
+            <div class="browser__bar"><i></i><i></i><i></i><span>{featured.data.links.live?.replace("https://", "")}</span></div>
+            <img src={featured.data.cover} alt={`${featured.data.title} 실제 화면`} loading="lazy" decoding="async" />
+          </div>
+          <PaperSlot class="feature__slot" label={featured.data.title} title={featured.data.paper} body={featured.data.kind} foot="04" tilt="-3,-18,6" shadow={0.42} />
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section" id="work" data-tone-zone="light">
+    <div class="shell work__head">
+      <h2 class="headline" data-rise>실제로 쓰려고<br />만든 것들.</h2>
+      <p class="lede" data-rise style="--i:1">카드에 마우스를 올리면, 종이가 그 작업의 원칙을 보여줍니다.</p>
+    </div>
+    <div class="shell work__layout">
+      <div class="work__grid">
+        {works.map((work, index) => <WorkCard entry={work} index={index} total={works.length} />)}
+      </div>
+      <div class="work__side">
+        <PaperSlot label="Work" title={`만든 것 ${works.length}`} body={`운영 중 ${live.length} · npm ${packages.length}`} foot="05" tilt="-3,-14,3" />
+      </div>
+    </div>
+  </section>
+
+  {notes.length > 0 && (
+    <section class="section notes" id="notes" data-tone-zone="light">
+      <div class="shell notes__grid">
+        <div>
+          <h2 class="headline" data-rise>짧은 기록.</h2>
+          <p class="lede" data-rise style="--i:1; margin-top:18px">만들면서 배운 것을 한 장씩 남깁니다.</p>
+          <PaperSlot class="notes__slot" label="Notes" title="적어 두지 않으면 사라진다" body={`${notes.length}장째 기록 중`} foot="06" tilt="5,14,-4" />
+        </div>
+        <div>
+          <ul class="note-list">
+            {notes.slice(0, 4).map((note) => (
+              <li>
+                <a class="note-row" href={`/notes/${note.id}`}>
+                  <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+                  <h3>{note.data.title}</h3>
+                  <p>{note.data.summary}</p>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a class="pill notes__more" href="/notes">전체 기록</a>
+        </div>
+      </div>
+    </section>
+  )}
+</Base>

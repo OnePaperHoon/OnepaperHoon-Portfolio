@@ -1,0 +1,40 @@
+---
+const path = Astro.url.pathname;
+const links = [
+  { href: "/#work", label: "Work", current: path.startsWith("/work") },
+  { href: "/notes", label: "Notes", current: path.startsWith("/notes") },
+  { href: "#contact", label: "Contact", current: false },
+];
+---
+
+<header class="site-header" data-tone="light">
+  <div class="shell site-header__inner">
+    <a class="brand" href="/" aria-label="onepaperhoon 홈">
+      <span class="brand__sheet" aria-hidden="true"></span>
+      <span>onepaperhoon</span>
+    </a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+      {links.map((link) => <a href={link.href} aria-current={link.current ? "page" : undefined}>{link.label}</a>)}
+    </nav>
+  </div>
+</header>
+
+<script>
+  // 헤더 아래에 깔린 구간의 밝기에 맞춰 글자색을 바꿉니다.
+  const header = document.querySelector<HTMLElement>(".site-header");
+  const zones = [...document.querySelectorAll<HTMLElement>("[data-tone-zone]")];
+  if (header && zones.length) {
+    const update = () => {
+      const probe = 42;
+      const zone = zones.find((el) => {
+        const rect = el.getBoundingClientRect();
+        return rect.top <= probe && rect.bottom > probe;
+      });
+      header.dataset.tone = zone?.dataset.toneZone ?? "light";
+      header.classList.toggle("is-scrolled", window.scrollY > 24);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+  }
+</script>

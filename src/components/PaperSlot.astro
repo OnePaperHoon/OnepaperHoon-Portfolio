@@ -1,0 +1,40 @@
+---
+/**
+ * 종이가 내려앉는 자리. WebGL 종이가 이 사각형의 위치·크기를 따라가며 아래 문구를 인쇄해 보여줍니다.
+ * WebGL이 없거나 '동작 줄이기' 환경에서는 같은 내용의 CSS 종이 카드가 그대로 보입니다.
+ */
+interface Props {
+  label: string;
+  title: string;
+  body?: string;
+  foot?: string;
+  /** 기울기 "x,y,z" (도) */
+  tilt?: string;
+  /** 그림자 진하기 0~1. 하늘 위에서는 0. */
+  shadow?: number;
+  fold?: "plane";
+  class?: string;
+}
+const { label, title, body = "", foot = "", tilt = "-4,10,-4", shadow = 0.2, fold, class: className } = Astro.props;
+const rot = Number(tilt.split(",")[2] ?? 0);
+---
+
+<div
+  class:list={["paper-slot", className]}
+  style={`--slot-rot:${-rot}deg`}
+  data-paper-slot
+  data-label={label}
+  data-title={title}
+  data-body={body}
+  data-foot={foot}
+  data-tilt={tilt}
+  data-shadow={shadow}
+  data-fold={fold}
+>
+  <div class="paper-card">
+    <span class="paper-card__label">{label}</span>
+    <strong class="paper-card__title" data-short={title.length <= 4 ? "" : undefined}>{title}</strong>
+    {body && <span class="paper-card__body">{body}</span>}
+    <span class="paper-card__foot"><span>{foot}</span><span>onepaperhoon</span></span>
+  </div>
+</div>

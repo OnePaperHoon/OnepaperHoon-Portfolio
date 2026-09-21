@@ -1,0 +1,83 @@
+---
+import "@/styles/global.css";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import { site } from "@/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  /** 첫 화면에서 종이비행기가 날아 들어와 펼쳐지는 인트로 */
+  flyIn?: boolean;
+  type?: "website" | "article";
+}
+const { title, description = site.description, image = "/og.jpg", flyIn = false, type = "website" } = Astro.props;
+const pageTitle = title ? `${title} — ${site.name}` : site.title;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const ogImage = new URL(image, site.url).href;
+const verification = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION;
+const person = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: site.author,
+  alternateName: site.name,
+  url: site.url,
+  sameAs: [site.github],
+};
+---
+
+<!doctype html>
+<html lang="ko" data-paper-intro={flyIn ? "fly-in" : undefined}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#3647c9" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={site.author} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title={`${site.name} notes`} href="/rss.xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {verification && !verification.startsWith("REPLACE") && <meta name="google-site-verification" content={verification} />}
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@800;900&family=JetBrains+Mono:wght@400;500&display=swap" />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(person)} />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+
+    <script>
+      // 스크롤 등장
+      const risers = document.querySelectorAll<HTMLElement>("[data-rise]");
+      const observer = new IntersectionObserver(
+        (entries) => entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-in");
+          observer.unobserve(entry.target);
+        }),
+        { threshold: 0.15, rootMargin: "0px 0px -6% 0px" },
+      );
+      risers.forEach((el) => observer.observe(el));
+
+      // 종이 무대: 동작 줄이기를 켠 환경에서는 CSS 종이 카드로 둡니다.
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        import("@/scripts/paper/stage").then(({ mountPaper }) => mountPaper()).catch(() => undefined);
+      }
+    </script>
+  </body>
+</html>

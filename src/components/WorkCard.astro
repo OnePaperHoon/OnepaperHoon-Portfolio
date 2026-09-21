@@ -1,0 +1,36 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { statusLabel } from "@/site";
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  index: number;
+  total: number;
+}
+const { entry, index, total } = Astro.props;
+const { title, kind, cover, terminal, tint, status, paper } = entry.data;
+const foot = `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+---
+
+<a
+  class="card"
+  href={`/work/${entry.id}`}
+  style={`--tint:${tint}`}
+  data-rise
+  data-paper-hover
+  data-label={title}
+  data-title={paper}
+  data-body={kind}
+  data-foot={foot}
+>
+  <div class="card__head">
+    <h3 class="card__title">{title}</h3>
+    <span class="card__kind">{kind}</span>
+  </div>
+  {cover && <div class="card__shot"><img src={cover} alt="" loading="lazy" decoding="async" /></div>}
+  {!cover && terminal && <pre class="card__terminal" aria-hidden="true">{terminal.join("\n")}</pre>}
+  <div class="card__foot">
+    <span class="badge" data-status={status}><i></i>{statusLabel[status]}</span>
+    <span class="pill pill--light">자세히</span>
+  </div>
+</a>

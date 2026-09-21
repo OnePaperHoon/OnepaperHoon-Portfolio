@@ -1,0 +1,38 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import PaperSlot from "@/components/PaperSlot.astro";
+
+const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-", ".");
+---
+
+<Base title="Notes" description="만들면서 배운 것을 한 장씩 남기는 기록.">
+  <div data-tone-zone="light">
+    <section class="shell page-top">
+      <div class="detail__grid">
+        <div>
+          <p class="eyebrow detail__kind">Notes</p>
+          <h1 class="detail__title">짧은 기록.</h1>
+          <p class="detail__summary">만들면서 배운 것, 다음에 또 헷갈릴 것들을 한 장씩 남깁니다.</p>
+        </div>
+        <PaperSlot class="detail__slot" label="Notes" title="적어 두지 않으면 사라진다" body={`${notes.length}장째 기록 중`} foot="notes" tilt="5,14,-4" />
+      </div>
+    </section>
+    <section class="shell" style="padding-bottom:clamp(80px,10vw,140px)">
+      <ul class="note-list">
+        {notes.map((note) => (
+          <li>
+            <a class="note-row" href={`/notes/${note.id}`}>
+              <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+              <h3>{note.data.title}</h3>
+              <p>{note.data.summary}</p>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      {notes.length === 0 && <p class="lede" style="margin-top:30px">아직 적어 둔 기록이 없습니다.</p>}
+    </section>
+  </div>
+</Base>

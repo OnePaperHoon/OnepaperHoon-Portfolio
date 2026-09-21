@@ -1,0 +1,29 @@
+---
+import PaperSlot from "./PaperSlot.astro";
+import { site } from "@/site";
+---
+
+<footer class="scene scene--dusk footer" id="contact" data-tone-zone="dark">
+  <div class="scene__grain" aria-hidden="true"></div>
+  <div class="horizon" aria-hidden="true"></div>
+  <div class="shell footer__grid">
+    <div>
+      <h2 class="footer__title" data-rise>한 장이면<br />충분합니다.</h2>
+      <p class="footer__text" data-rise style="--i:1">만들고 싶은 것, 같이 풀고 싶은 문제가 있다면 한 장 분량으로 적어 보내주세요. 종이비행기로 접어 보내도 받습니다.</p>
+      <div class="footer__actions" data-rise style="--i:2">
+        <a class="pill pill--light" href={`mailto:${site.email}`}>메일 보내기</a>
+        <a class="pill pill--ghost" href={site.github} target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    </div>
+    <PaperSlot class="footer__slot" label="To. 한장훈" title="여기까지 읽어주셔서 고맙습니다." body="다음 한 장은 당신 차례." foot="fin." tilt="0,0,0" shadow={0} fold="plane" />
+  </div>
+  <div class="shell footer__base">
+    <a class="brand" href="/">onepaperhoon</a>
+    <span>© {new Date().getFullYear()} {site.author} · Seoul, KR</span>
+    <nav class="footer__links" aria-label="바깥 링크">
+      <a href={site.github} target="_blank" rel="noreferrer">GitHub</a>
+      <a href="/notes">Notes</a>
+      <a href="/rss.xml">RSS</a>
+    </nav>
+  </div>
+</footer>

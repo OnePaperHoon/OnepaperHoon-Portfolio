@@ -1,0 +1,65 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import PaperSlot from "@/components/PaperSlot.astro";
+import { statusLabel } from "@/site";
+
+export async function getStaticPaths() {
+  const works = (await getCollection("work", ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+  return works.map((entry, index) => ({
+    params: { slug: entry.id },
+    props: { entry, previous: works[(index - 1 + works.length) % works.length], next: works[(index + 1) % works.length] },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<"work">;
+  previous: CollectionEntry<"work">;
+  next: CollectionEntry<"work">;
+}
+const { entry, previous, next } = Astro.props;
+const { data } = entry;
+const { Content } = await render(entry);
+---
+
+<Base title={data.title} description={data.summary} image={data.cover} type="article">
+  <div data-tone-zone="light">
+    <section class="shell page-top">
+      <div class="detail__grid">
+        <div>
+          <p class="eyebrow detail__kind">{data.kind} · {data.year}</p>
+          <h1 class="detail__title">{data.title}</h1>
+          <p class="detail__summary">{data.summary}</p>
+          <div class="detail__actions">
+            {data.links.live && <a class="pill" href={data.links.live} target="_blank" rel="noreferrer">서비스 열기</a>}
+            {data.links.npm && <a class="pill" href={data.links.npm} target="_blank" rel="noreferrer">npm</a>}
+            {data.links.repo && <a class="pill pill--ghost" href={data.links.repo} target="_blank" rel="noreferrer">GitHub</a>}
+          </div>
+        </div>
+        <PaperSlot class="detail__slot" label="Principle" title={data.paper} body={data.kind} foot={data.title} tilt="-5,-16,5" />
+      </div>
+
+      <dl class="facts">
+        <div><dt>역할</dt><dd>{data.role}</dd></div>
+        <div><dt>상태</dt><dd>{statusLabel[data.status]} · {data.timeline}</dd></div>
+        <div><dt>스택</dt><dd>{data.stack.length ? data.stack.join(" · ") : "—"}</dd></div>
+      </dl>
+
+      <div class="detail__cover">
+        {data.cover ? (
+          <div class="browser">
+            <div class="browser__bar"><i></i><i></i><i></i><span>{data.links.live?.replace("https://", "")}</span></div>
+            <img src={data.cover} alt={`${data.title} 실제 화면`} />
+          </div>
+        ) : data.terminal && <pre class="terminal-cover" style={`--tint:${data.tint}`}>{data.terminal.join("\n")}</pre>}
+      </div>
+    </section>
+
+    <article class="shell--narrow prose"><Content /></article>
+
+    <nav class="shell pager" aria-label="다른 작업">
+      <a href={`/work/${previous.id}`}><span>← 이전</span><strong>{previous.data.title}</strong></a>
+      <a href={`/work/${next.id}`}><span>다음 →</span><strong>{next.data.title}</strong></a>
+    </nav>
+  </div>
+</Base>
