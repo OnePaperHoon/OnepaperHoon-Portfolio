@@ -1,6 +1,8 @@
 /**
- * 셰이더 하늘. 콘텐츠 뒤에 고정된 캔버스 하나가, 지금 화면에 가장 크게 보이는 [data-sky] 상자 자리에만 하늘을 그립니다.
+ * 셰이더 하늘. 캔버스 하나를, 지금 화면에 가장 크게 보이는 [data-sky] 상자 안으로 옮겨 넣고 그 상자 전체에 하늘을 그립니다.
  *
+ *  - 캔버스는 상자의 자식이라 페이지와 함께 브라우저가 스크롤합니다. 스크롤 위치를 읽어 다시 그리는 방식은
+ *    한 박자씩 늦어 배경이 끊겨 보이므로 쓰지 않습니다. 셰이더는 구름이 흐르는 것만 그립니다.
  *  - 색은 전부 CSS 변수(--sky-1..4, --sun, --cloud …)에서 읽습니다. 같은 변수로 CSS 그라데이션 폴백도 그리므로
  *    시간대 팔레트는 global.css 한 곳에서만 고칩니다.
  *  - 하늘을 그리는 동안 그 상자에는 .is-live가 붙어 CSS 폴백 배경이 꺼집니다. WebGL이 없으면 폴백이 그대로 남습니다.
@@ -12,7 +14,6 @@ const VERT = `attribute vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }
 const FRAG = `
 precision highp float;
 uniform vec2 uRes;
-uniform vec4 uRect; // x, top, w, h (캔버스 px, 위에서부터)
 uniform float uTime, uClouds, uStars, uSunSize, uSunDisc, uSeed;
 uniform float uUnit; // 상자 높이 1 = 화면 높이의 몇 배인지. 해·구름·별의 크기는 상자가 아니라 화면 기준으로 잡습니다.
 uniform vec3 uC0, uC1, uC2, uC3, uSun, uCloud, uShade;
@@ -32,10 +33,9 @@ float fbm(vec2 v) {
 
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
-  vec2 uv = (px - uRect.xy) / uRect.zw;
-  if (uv.y < 0.0 || uv.y > 1.0) { gl_FragColor = vec4(0.0); return; }
+  vec2 uv = px / uRes;
   float v = uv.y;
-  float aspect = uRect.z / uRect.w;
+  float aspect = uRes.x / uRes.y;
   vec2 p = vec2(uv.x * aspect, v) * uUnit;
   vec2 sunP = vec2(uSunPos.x * aspect, uSunPos.y) * uUnit;
 
@@ -106,10 +106,10 @@ let rescan: (() => void) | null = null;
 
 export function mountSky() {
   if (rescan) return rescan();
-  const root = document.getElementById("sky-root");
-  if (!root) return;
   const canvas = document.createElement("canvas");
-  const gl = canvas.getContext("webgl", { alpha: true, antialias: false, premultipliedAlpha: true, powerPreference: "low-power" });
+  canvas.className = "sky-canvas";
+  canvas.setAttribute("aria-hidden", "true");
+  const gl = canvas.getContext("webgl", { alpha: false, antialias: false, powerPreference: "low-power" });
   if (!gl) return;
 
   const compile = (type: number, source: string) => {
@@ -131,19 +131,9 @@ export function mountSky() {
   gl.vertexAttribPointer(attribute, 2, gl.FLOAT, false, 0, 0);
   const U = (name: string) => gl.getUniformLocation(program, name);
   const u = {
-    res: U("uRes"), rect: U("uRect"), time: U("uTime"), clouds: U("uClouds"), stars: U("uStars"), sunSize: U("uSunSize"), sunDisc: U("uSunDisc"), unit: U("uUnit"), seed: U("uSeed"),
+    res: U("uRes"), time: U("uTime"), clouds: U("uClouds"), stars: U("uStars"), sunSize: U("uSunSize"), sunDisc: U("uSunDisc"), unit: U("uUnit"), seed: U("uSeed"),
     c: [U("uC0"), U("uC1"), U("uC2"), U("uC3")], sun: U("uSun"), cloud: U("uCloud"), shade: U("uShade"), sunPos: U("uSunPos"),
   };
-
-  let scale = 0.5;
-  const resize = () => {
-    scale = Math.min(0.5, 1100 / window.innerWidth);
-    canvas.width = Math.max(2, Math.round(window.innerWidth * scale));
-    canvas.height = Math.max(2, Math.round(window.innerHeight * scale));
-    gl.viewport(0, 0, canvas.width, canvas.height);
-  };
-  resize();
-  window.addEventListener("resize", resize);
 
   let boxes: { el: HTMLElement; palette: Palette; seed: number }[] = [];
   let live: HTMLElement | null = null;
@@ -155,33 +145,37 @@ export function mountSky() {
   rescan = scan;
   document.addEventListener("astro:after-swap", () => { boxes = []; live = null; });
 
-  let cleared = false;
   let last = 0;
   const frame = (now: number) => {
     requestAnimationFrame(frame);
     if (document.hidden || now - last < 32) return;
     last = now;
 
-    // 화면에 가장 크게 걸친 상자 하나만 그립니다.
+    // 화면에 가장 크게 걸친 상자 하나만 그립니다. 아무것도 안 보이면 쉽니다.
     let best: (typeof boxes)[number] | null = null, bestArea = 0, bestRect: DOMRect | null = null;
     for (const box of boxes) {
       const rect = box.el.getBoundingClientRect();
       const visible = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
       if (visible > bestArea) { best = box; bestArea = visible; bestRect = rect; }
     }
-    if (live !== (best?.el ?? null)) {
+    if (!best || !bestRect) return;
+
+    // 캔버스를 그 상자 안으로 옮기고(컨텍스트는 유지됩니다) 상자 크기의 절반 해상도로 맞춥니다.
+    if (live !== best.el) {
       live?.classList.remove("is-live");
-      live = best?.el ?? null;
+      live = best.el;
+      best.el.prepend(canvas);
     }
-    if (!best || !bestRect) {
-      if (!cleared) { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); cleared = true; }
-      return;
+    const scale = Math.min(0.5, 1100 / bestRect.width, 1100 / bestRect.height);
+    const width = Math.max(2, Math.round(bestRect.width * scale)), height = Math.max(2, Math.round(bestRect.height * scale));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+      gl.viewport(0, 0, width, height);
     }
-    cleared = false;
 
     const { palette } = best;
-    gl.uniform2f(u.res, canvas.width, canvas.height);
-    gl.uniform4f(u.rect, bestRect.left * scale, bestRect.top * scale, bestRect.width * scale, bestRect.height * scale);
+    gl.uniform2f(u.res, width, height);
     gl.uniform1f(u.time, now / 1000);
     gl.uniform1f(u.clouds, palette.clouds);
     gl.uniform1f(u.stars, palette.stars);
@@ -196,7 +190,6 @@ export function mountSky() {
     gl.uniform2f(u.sunPos, palette.sunPos[0], palette.sunPos[1]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    if (!canvas.isConnected) root.append(canvas);
     best.el.classList.add("is-live"); // 첫 장면이 그려진 뒤에야 CSS 폴백을 끕니다
   };
   requestAnimationFrame(frame);
