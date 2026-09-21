@@ -17,9 +17,6 @@ const links = [
       {links.map((link) => <a href={link.href} aria-current={link.current ? "page" : undefined}>{link.label}</a>)}
       <span class="site-tools">
         <button class="tool" type="button" data-term-toggle aria-label="터미널 열기 (` 키)" title="터미널  `">&gt;_</button>
-        <button class="tool" type="button" data-sound-toggle aria-pressed="false" aria-label="소리 켜기" title="종이 소리">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18V6L7.5 9.5z" /><path class="wave" d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" /><path class="mute" d="m15.5 9.5 5 5m0-5-5 5" /></svg>
-        </button>
       </span>
     </nav>
   </div>

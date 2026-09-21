@@ -98,7 +98,6 @@ const person = {
     <script>
       import { mountSky } from "@/scripts/sky";
       import { mountTerminals } from "@/scripts/terminal";
-      import { mountSound } from "@/scripts/sound";
       import { mountConsole } from "@/scripts/console";
 
       // ClientRouter 아래에서 모듈 스크립트는 한 번만 실행되므로, 페이지마다 할 일은 astro:page-load에 겁니다.
@@ -119,7 +118,6 @@ const person = {
         document.querySelectorAll<HTMLElement>("[data-rise]").forEach((el) => observer?.observe(el));
 
         mountTerminals();
-        mountSound();
         mountConsole();
 
         // 종이 무대와 셰이더 하늘: 동작 줄이기를 켠 환경에서는 CSS 종이 카드와 그라데이션으로 둡니다.

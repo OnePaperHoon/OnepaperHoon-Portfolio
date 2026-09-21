@@ -13,7 +13,6 @@ import {
   Group, HemisphereLight, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry,
   Points, PointsMaterial, Quaternion, RepeatWrapping, Scene, SRGBColorSpace, Vector3, WebGLRenderer,
 } from "three";
-import { play } from "../sound";
 import { buildSheet, deform, SHEET_H, SHEET_W, STAGES } from "./fold";
 import { contentKey, drawSheet, loadSheetFonts, type SheetContent } from "./sheet-texture";
 
@@ -214,7 +213,7 @@ export async function mountPaper() {
       slot.el.setAttribute("aria-label", slot.shape === "plane" ? "종이비행기 날리기" : "구겨진 종이 던지기");
     }
     slots = next;
-    if (covering) { covering = false; landing = 1; play("land"); }
+    if (covering) { covering = false; landing = 1; }
   };
   document.addEventListener("astro:after-swap", () => {
     slots = [];
@@ -234,7 +233,6 @@ export async function mountPaper() {
     mode = "idle";
     flutter = 0;
     document.documentElement.classList.add("is-covering");
-    play("turn");
     window.clearTimeout(coverTimer);
     coverTimer = window.setTimeout(() => { covering = false; }, 4000); // 무슨 일이 있어도 화면을 덮은 채로 남지 않게
     const load = navigation.loader;
@@ -296,7 +294,6 @@ export async function mountPaper() {
     velocity = vx === undefined || vy === undefined
       ? thrown === "ball" ? { x: 3.4, y: 6.2 } : { x: Math.cos(CRUISE) * 5.2, y: Math.sin(CRUISE) * 5.2 }
       : { x: vx, y: vy };
-    play("whoosh");
     return true;
   };
   document.addEventListener("paper:throw", (event) => (event as CustomEvent<{ done?: (ok: boolean) => void }>).detail?.done?.(launch()));
@@ -318,7 +315,6 @@ export async function mountPaper() {
     document.documentElement.classList.remove("paper-grabbing");
     if (dragKind === "hold") {
       flutter = 0.6; // 놓으면 팔랑거리며 제자리로
-      play("flip");
       return;
     }
     const moved = Math.hypot(event.clientX - dragStart.x, event.clientY - dragStart.y);
@@ -350,7 +346,6 @@ export async function mountPaper() {
   let last = performance.now();
   let intro = document.documentElement.dataset.paperIntro === "fly-in" && window.scrollY < 40 ? 0 : 1;
   let lastTarget = { x: 0, y: 0, scale: 1, stage: 0, crumple: 0, tilt: [0, 0, 0], shadow: 0, backlit: 0.1 };
-  let wasCrumpling = false;
 
   const qSheet = new Quaternion(), qPlane = new Quaternion(), qBall = new Quaternion(), qTemp = new Quaternion();
   const euler = new Euler();
@@ -445,11 +440,8 @@ export async function mountPaper() {
         flipCount += 1;
         print(flipCount % 2, wanted);
         shownKey = wantedKey;
-        play("flip");
       }
     }
-    if (targetCrumple > 0.5 && !wasCrumpling && state.crumple < 0.4) play("crumple");
-    wasCrumpling = targetCrumple > 0.5;
 
     // 4. 움직임
     const pace = covering ? 7.5 : mode === "drag" ? 14 : landing > 0 ? 3.4 : flutter > 0 ? 2.4 : 5.2;

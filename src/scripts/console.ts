@@ -4,21 +4,19 @@
  * 작업·노트 목록은 Base.astro가 심어 둔 #site-index JSON에서 읽습니다.
  */
 import { navigate } from "astro:transitions/client";
-import { play, setSound, soundEnabled } from "./sound";
 
 type Work = { id: string; title: string; kind: string; status: string; summary: string; paper: string; links: Record<string, string | undefined> };
 type Note = { id: string; title: string; date: string; summary: string };
 type Index = { author: string; email: string; github: string; works: Work[]; notes: Note[] };
 
 const PHASES = ["dawn", "day", "dusk", "night"];
-const COMMANDS = ["help", "ls", "open", "cat", "throw", "now", "sound", "whoami", "contact", "github", "clear", "exit"];
+const COMMANDS = ["help", "ls", "open", "cat", "throw", "now", "whoami", "contact", "github", "clear", "exit"];
 const HELP = [
   "ls [work|notes]      목록",
   "open <이름>          그 작업·노트로 이동   (open feedline)",
   "cat <이름>           요약과 원칙 한 줄",
   "throw                지금 접혀 있는 종이를 날리기",
   "now <dawn|day|dusk|night|auto>   하늘의 시간대",
-  "sound <on|off>       종이 소리",
   "whoami · contact · github",
   "clear · exit         (Esc로도 닫힙니다)",
 ];
@@ -105,11 +103,6 @@ function run(raw: string) {
       document.dispatchEvent(new CustomEvent("sky:now"));
       return line(arg === "auto" ? "하늘을 지금 시각에 맞췄습니다." : `하늘을 ${arg} 로 바꿨습니다.`);
     }
-    case "sound": {
-      if (arg !== "on" && arg !== "off") return line(`sound: 지금은 ${soundEnabled() ? "on" : "off"} — sound on | off`);
-      setSound(arg === "on");
-      return line(`소리 ${arg}`);
-    }
     case "whoami":
       line(`${site.author} (onepaperhoon)`);
       return line("흩어진 정보와 기다림을, 믿을 수 있는 상태와 조용한 신호로 바꾸는 서비스를 만듭니다.", "dim");
@@ -137,7 +130,7 @@ function complete(value: string) {
   const site = readIndex();
   if (parts.length <= 1) return COMMANDS.filter((c) => c.startsWith(parts[0] ?? ""));
   const pool = ["open", "cd", "cat"].includes(parts[0]) ? [...site.works.map((w) => w.id), ...site.notes.map((n) => n.id)]
-    : parts[0] === "now" ? [...PHASES, "auto"] : parts[0] === "sound" ? ["on", "off"] : parts[0] === "ls" ? ["work", "notes"] : [];
+    : parts[0] === "now" ? [...PHASES, "auto"] : parts[0] === "ls" ? ["work", "notes"] : [];
   return pool.filter((c) => c.startsWith(parts[1] ?? "")).map((c) => `${parts[0]} ${c}`);
 }
 
@@ -171,8 +164,6 @@ function build(root: HTMLElement) {
       const options = complete(input.value);
       if (options.length === 1) input.value = `${options[0]} `;
       else if (options.length > 1) line(options.map((o) => o.split(" ").pop()).join("   "), "dim");
-    } else if (event.key.length === 1) {
-      play("key");
     }
   });
 }

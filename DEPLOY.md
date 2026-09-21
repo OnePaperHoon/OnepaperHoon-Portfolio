@@ -94,10 +94,9 @@ draft: false # true 면 어디에도 노출되지 않습니다
 - **스크롤 = 시간의 흐름.** 첫 장면은 방문자의 지금 시각(새벽 5–9시 / 낮 9–17시 / 노을 17–20시 / 밤), 다음 장면은 그다음 시간대, 푸터는 또 그다음입니다. 장면에 `data-step="0|1|2"`를 주면 됩니다.
 - 미리보기: 주소 뒤에 `?now=dawn|day|dusk|night`.
 
-## 터미널 모드 · 소리 · 공유 이미지
+## 터미널 모드 · 달 · 공유 이미지
 
-- **터미널 모드** (`src/scripts/console.ts`): `` ` `` 키나 헤더의 `>_` 버튼으로 엽니다. `help`, `ls`, `open <이름>`, `cat <이름>`, `throw`, `now <시간대>`, `sound on|off` … 목록은 Base.astro가 심는 `#site-index` JSON에서 읽으므로 작업·노트를 추가하면 자동으로 들어갑니다. 명령을 늘리려면 `run()`의 `switch`에 한 줄 추가.
-- **소리** (`src/scripts/sound.ts`): 파일 없이 WebAudio로 합성합니다 (뒤집기·날리기·구기기·페이지 넘김·타자). 기본은 꺼짐, 헤더의 스피커 버튼으로 켜며 선택은 localStorage에 남습니다.
+- **터미널 모드** (`src/scripts/console.ts`): `` ` `` 키나 헤더의 `>_` 버튼으로 엽니다. `help`, `ls`, `open <이름>`, `cat <이름>`, `throw`, `now <시간대>` … 목록은 Base.astro가 심는 `#site-index` JSON에서 읽으므로 작업·노트를 추가하면 자동으로 들어갑니다. 명령을 늘리려면 `run()`의 `switch`에 한 줄 추가.
 - **달**: 밤하늘의 달은 오늘 실제 위상대로 그려집니다 (`sky.ts`의 `moonPhase`, 외부 API 없음).
 - **공유 이미지** (`src/pages/og/[kind]/[slug].png.ts`): 작업·노트마다 "그 글의 한 줄이 적힌 종이 한 장" PNG를 빌드할 때 만듭니다 (satori + resvg, 글꼴은 `src/assets/fonts`의 Pretendard). 새 글을 추가하면 자동으로 생기고, 글 하나당 빌드가 1초쯤 늘어납니다. 홈은 `public/og.jpg`.
 
