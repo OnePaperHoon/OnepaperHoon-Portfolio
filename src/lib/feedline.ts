@@ -5,11 +5,11 @@
  */
 export type FeedlineStatus = { ok: number; total: number; checkedAt: string };
 
-/**
- * 브라우저에서 다시 불러올지. FeedLine이 onepaperhoon.com에 CORS를 허용하기 전에는 요청이 전부 막혀
- * 콘솔에 오류만 남기므로 꺼 둡니다. FeedLine에 공개 상태 주소(CORS 허용)를 추가한 뒤 true로 바꾸세요.
- */
-export const FEEDLINE_BROWSER_FETCH = false;
+/** 브라우저에서 방문 시점의 값으로 다시 불러올지. FeedLine의 /api/public-status가 onepaperhoon.com에 CORS를 허용합니다. */
+export const FEEDLINE_BROWSER_FETCH = true;
+
+/** 브라우저용: CORS가 열린 공개 주소만 씁니다 (브리핑 API는 CORS가 없어 브라우저에서 막힙니다). */
+export const FEEDLINE_BROWSER_URL = "https://feedline.kr/api/public-status";
 
 /** 가벼운 공개 상태 주소를 먼저, 없으면 브리핑 API에서 같은 필드를 읽습니다. */
 export const FEEDLINE_STATUS_URLS = ["https://feedline.kr/api/public-status", "https://feedline.kr/api/briefing"];

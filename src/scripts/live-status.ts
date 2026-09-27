@@ -2,7 +2,7 @@
  * 빌드 때 심어 둔 FeedLine 상태 숫자를, 가능하면 지금 값으로 바꿉니다.
  * 실패하면(오프라인, CORS 차단 등) 아무것도 건드리지 않아 "배포 시점 기준" 표시가 그대로 남습니다.
  */
-import { FEEDLINE_BROWSER_FETCH, FEEDLINE_STATUS_URLS, feedlineLine, parseFeedlineStatus, type FeedlineStatus } from "@/lib/feedline";
+import { FEEDLINE_BROWSER_FETCH, FEEDLINE_BROWSER_URL, feedlineLine, parseFeedlineStatus, type FeedlineStatus } from "@/lib/feedline";
 
 function ago(iso: string) {
   const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
@@ -15,7 +15,7 @@ let cached: FeedlineStatus | null = null;
 
 async function load() {
   if (cached) return cached;
-  for (const url of FEEDLINE_STATUS_URLS) {
+  for (const url of [FEEDLINE_BROWSER_URL]) {
     try {
       const response = await fetch(url, { signal: AbortSignal.timeout(5000), headers: { accept: "application/json" } });
       if (!response.ok) continue;
