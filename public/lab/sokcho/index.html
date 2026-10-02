@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OnePaperHoon — Archive 2026</title>
+<meta name="description" content="A personal photo archive. Sokcho in August and Kyoto in September, 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap">
+<style>
+:root{
+  --bg:#000; --ink:#f4f2ef; --dim:#8c8783; --line:rgba(244,242,239,.28);
+  --pad:clamp(14px, 2.6vw, 34px);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --hw:min(56vw, 640px);
+  --persp:1150px;
+  --safe-top:env(safe-area-inset-top, 0px); --safe-right:env(safe-area-inset-right, 0px);
+  --safe-bottom:env(safe-area-inset-bottom, 0px); --safe-left:env(safe-area-inset-left, 0px);
+  --tap:44px;
+  --serif:"Playfair Display", "Times New Roman", serif;
+  --sans:"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --cw:200px;
+}
+*,*::before,*::after{box-sizing:border-box; margin:0; padding:0}
+html{background:#000; scrollbar-width:none; -ms-overflow-style:none}
+html::-webkit-scrollbar, #grid::-webkit-scrollbar, #lit::-webkit-scrollbar{display:none}
+#grid, #lit{scrollbar-width:none; -ms-overflow-style:none}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans); font-weight:300;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden; min-height:100vh; min-height:100dvh; overscroll-behavior-y:none;
+}
+body.locked{overflow:hidden; height:100vh; height:100dvh}
+img{display:block; max-width:100%}
+button{font:inherit; color:inherit; background:none; border:0; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation}
+a{-webkit-tap-highlight-color:transparent}
+em{font-style:normal}
+
+#scrolltrack{height:170vh; pointer-events:none}
+
+/* ---------- 3D archive ---------- */
+#stage{
+  position:fixed; inset:0; z-index:10; perspective:var(--persp); perspective-origin:50% 50%;
+  overflow:hidden; touch-action:none;
+  transition:opacity .6s var(--ease), filter .6s var(--ease);
+}
+@media (pointer:coarse){ #stage{touch-action:pan-y} }
+#world{
+  position:absolute; top:50%; left:50%;
+  width:0; height:0;
+  transform-style:preserve-3d;
+  will-change:transform;
+}
+#orb{
+  position:absolute; top:0; left:0;
+  width:0; height:0;
+  transform-style:preserve-3d;
+  opacity:1;
+  transform:none;
+}
+#headline{
+  position:absolute; top:0; left:0;
+  width:var(--hw);
+  margin-left:calc(var(--hw) / -2);
+  text-align:center;
+  font-family:var(--serif);
+  font-weight:400;
+  font-size:clamp(25px, 3.7vw, 55px);
+  line-height:1.06;
+  letter-spacing:-.005em;
+  color:#fff;
+  text-shadow:0 2px 34px rgba(0,0,0,.55);
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#headline .inner{
+  position:absolute; top:0; left:0;
+  width:100%;
+  transform:translateY(-50%);
+}
+#headline .inner span{
+  display:inline-block; opacity:0; transform:translateY(.42em); filter:blur(7px);
+}
+body.revealed #headline .inner span{
+  opacity:1; transform:none; filter:blur(0);
+  transition:opacity 1.05s var(--ease), transform 1.15s var(--ease), filter 1.05s var(--ease);
+  transition-delay:calc(.9s + var(--i) * .085s);
+}
+.card{
+  position:absolute; top:0; left:0;
+  width:var(--cw); height:calc(var(--cw) * 1.25);
+  margin-left:calc(var(--cw) / -2); margin-top:calc(var(--cw) * -.625);
+  cursor:pointer; backface-visibility:visible;
+}
+.card figure{
+  position:absolute; inset:0; overflow:hidden; border-radius:3px; background:#0a0a0a;
+  transition:transform .5s ease;
+}
+.card:hover figure{transform:scale(1.045)}
+.card img{width:100%; height:100%; object-fit:cover; opacity:0; -webkit-user-drag:none; user-select:none}
+.card img.in{opacity:1}
+body.revealed .card img{transition:opacity .8s ease-out}
+.card figure::after{
+  content:""; position:absolute; inset:0; background:rgba(0,0,0,var(--d,0));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07); border-radius:3px; pointer-events:none;
+}
+body.gridview #stage{opacity:0; filter:blur(14px); pointer-events:none}
+body.switching #stage, body.switching .bio, body.switching .colophon{opacity:0; transition:opacity .45s var(--ease)}
+#menu nav a.current{opacity:1}
+
+.vig{
+  position:fixed; inset:0; z-index:12; pointer-events:none;
+  background:radial-gradient(ellipse 88% 92% at 50% 50%, transparent 48%, rgba(0,0,0,.26) 80%, rgba(0,0,0,.72) 100%);
+  transition:opacity .6s var(--ease);
+}
+body.gridview .vig, body.lit .vig{opacity:0}
+
+/* ---------- chrome ---------- */
+.chrome{opacity:0}
+body.revealed .chrome{opacity:1; transition:opacity 1.2s var(--ease) .15s, transform .5s var(--ease)}
+header{
+  position:fixed; top:0; left:0; width:100%; z-index:60;
+  display:flex; justify-content:space-between; align-items:flex-start;
+  padding:calc(var(--pad) * .8 + var(--safe-top)) calc(var(--pad) + var(--safe-right)) calc(var(--pad) * .35) calc(var(--pad) + var(--safe-left));
+  mix-blend-mode:difference;
+}
+.wordmark{
+  font-family:var(--serif); font-size:clamp(19px, 2.1vw, 27px); letter-spacing:.005em; line-height:1;
+  color:#fff; text-decoration:none; white-space:nowrap;
+}
+.menu-btn{display:flex; flex-direction:column; align-items:flex-end; gap:5px; min-width:44px; min-height:44px; padding:8px 0 4px}
+.menu-label{font-size:clamp(12px, 1.25vw, 15px); letter-spacing:.01em; color:#fff; transition:opacity .35s}
+.bars{position:relative; display:block; width:clamp(42px, 4.4vw, 62px); height:clamp(16px, 2vw, 22px)}
+.bars i{
+  position:absolute; left:0; right:0; top:50%; height:1px; background:#fff;
+  transform:translateY(-5px); transition:transform .45s var(--ease), width .45s var(--ease);
+}
+.bars i + i{left:auto; width:clamp(34px, 3.6vw, 50px); transform:translateY(5px)}
+.menu-btn:hover .bars i + i{transform:translate(-8px, 5px)}
+body.menuopen header{z-index:90; mix-blend-mode:normal}
+body.menuopen .wordmark{color:#f4f2ef}
+body.menuopen .menu-label{opacity:0}
+body.menuopen .bars i{width:100%; left:0; background:#f4f2ef; transform:translateY(0) rotate(45deg)}
+body.menuopen .bars i + i{transform:translateY(0) rotate(-45deg)}
+
+.bio{
+  position:fixed; left:calc(var(--pad) + var(--safe-left)); bottom:calc(var(--pad) + var(--safe-bottom));
+  z-index:55; max-width:min(320px, 46vw);
+}
+.bio .who{display:flex; align-items:center; gap:14px; margin-bottom:14px}
+#avatar{width:52px; height:52px; border-radius:3px; object-fit:cover; filter:grayscale(.15)}
+.bio b{font-family:var(--serif); font-weight:400; font-size:19px; letter-spacing:.01em}
+.bio p{font-size:12.5px; line-height:1.62; color:rgba(244,242,239,.72)}
+body.deep .bio, body.gridview .bio, body.lit .bio{opacity:0; transform:translateY(10px); pointer-events:none}
+
+.colophon{
+  position:fixed; right:calc(var(--pad) + var(--safe-right)); bottom:calc(var(--pad) + var(--safe-bottom));
+  z-index:55; font-size:12.5px; color:rgba(244,242,239,.72);
+}
+body.gridview .colophon, body.lit .colophon{opacity:0}
+
+.gridbtn{
+  position:fixed; left:calc(var(--pad) + var(--safe-left)); bottom:calc(var(--pad) + var(--safe-bottom));
+  z-index:56; width:44px; height:44px; padding:5px;
+  display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:4px;
+  opacity:0; transform:translateY(8px); pointer-events:none;
+  transition:opacity .5s var(--ease), transform .5s var(--ease);
+}
+.gridbtn b{background:#f4f2ef; border-radius:2px; transition:transform .35s var(--ease), background .35s}
+body.deep .gridbtn, body.gridview .gridbtn{opacity:1; transform:none; pointer-events:auto}
+body.lit .gridbtn{opacity:0; pointer-events:none}
+.gridbtn:hover b{background:#fff; transform:scale(.86)}
+body.gridview .gridbtn b:first-child{transform:translate(3px, 3px)}
+body.gridview .gridbtn b:last-child{transform:translate(-3px, -3px)}
+
+.cue{
+  position:fixed; left:50%; bottom:calc(var(--pad) + var(--safe-bottom) + 4px); transform:translateX(-50%);
+  z-index:54; display:flex; align-items:center; gap:10px;
+  font-size:10px; text-transform:uppercase; letter-spacing:.24em; color:rgba(244,242,239,.42); white-space:nowrap;
+}
+.cue s{display:block; width:44px; height:1px; background:rgba(244,242,239,.28); overflow:hidden; text-decoration:none; position:relative}
+.cue s::after{content:""; position:absolute; inset:0; background:#f4f2ef; animation:sweep 2.6s ease infinite}
+@keyframes sweep{0%{transform:translateX(-100%)} 55%{transform:translateX(0)} 100%{transform:translateX(100%)}}
+body.deep .cue, body.gridview .cue, body.lit .cue{opacity:0}
+
+/* ---------- flat grid ---------- */
+#grid{
+  position:fixed; inset:0; z-index:20; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding:calc(var(--pad) * 3.4) var(--pad) calc(var(--pad) * 4); background:#000;
+  opacity:0; pointer-events:none; transition:opacity .6s var(--ease);
+}
+body.gridview #grid{opacity:1; pointer-events:auto}
+#grid .rows{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:clamp(10px, 1.4vw, 20px); max-width:1680px; margin:0 auto;
+}
+#grid figure{position:relative; aspect-ratio:4/5; border-radius:3px; background:#0b0b0b; cursor:pointer; overflow:hidden}
+#grid img{width:100%; height:100%; object-fit:cover; opacity:.82; transition:transform .8s var(--ease), opacity .8s var(--ease)}
+#grid figure:hover img{transform:scale(1.05); opacity:1}
+#grid figcaption{
+  position:absolute; left:0; right:0; bottom:0; font-family:var(--serif); font-size:15px;
+  background:linear-gradient(to bottom, transparent, rgba(0,0,0,.82)); padding:26px 14px 12px;
+  opacity:0; transform:translateY(6px); transition:opacity .4s var(--ease), transform .4s var(--ease);
+}
+#grid figure:hover figcaption{opacity:1; transform:none}
+
+/* ---------- lightbox ---------- */
+#lit{
+  position:fixed; inset:0; z-index:90; display:grid; place-items:center;
+  padding:clamp(56px, 8vh, 84px) var(--pad);
+  opacity:0; pointer-events:none; transition:opacity .42s var(--ease);
+}
+body.lit #lit{opacity:1; pointer-events:auto}
+#lit .scrim{position:absolute; inset:0}
+#lit .plate{
+  position:relative; width:min(72vw, 560px, (100vh - 250px) * .8);
+  transition:transform .62s var(--ease), opacity .42s ease; transform-origin:50% 0;
+}
+#lit .shot{
+  position:relative; width:100%; aspect-ratio:4/5; border-radius:2px; background:#0b0b0b;
+  box-shadow:0 30px 90px rgba(0,0,0,.75);
+}
+#lit .shot img{width:100%; height:100%; object-fit:cover; border-radius:2px}
+#lit .close{
+  position:absolute; top:12px; right:14px; font-size:12.5px; min-width:44px; min-height:44px; padding:10px 14px;
+  border:1px solid rgba(244,242,239,.78); border-radius:6px; background:rgba(0,0,0,.35); color:#f4f2ef;
+  transition:border-color .3s, background .3s;
+}
+#lit .close:hover{border-color:#fff; background:rgba(0,0,0,.55)}
+#lit .meta{
+  display:grid; grid-template-columns:minmax(0, .78fr) minmax(0, 1.22fr);
+  gap:clamp(18px, 2.4vw, 32px); padding-top:16px;
+}
+#litTitle{font-family:var(--serif); font-weight:400; font-size:clamp(20px, 1.9vw, 28px); line-height:1.08; letter-spacing:-.01em; margin-bottom:6px}
+#litWhere{font-size:13px; color:rgba(244,242,239,.62)}
+#litNote{font-size:13.5px; line-height:1.55; color:rgba(244,242,239,.92)}
+
+/* ---------- menu ---------- */
+#menu{
+  position:fixed; inset:0; z-index:80; background:#050505; display:grid; place-items:center;
+  clip-path:inset(0 0 100% 0); transition:clip-path .85s var(--ease); pointer-events:none;
+}
+body.menuopen #menu{clip-path:inset(0); pointer-events:auto}
+#menu nav{display:flex; flex-direction:column; gap:clamp(4px, 1vw, 10px); text-align:center}
+#menu nav a{
+  font-family:var(--serif); font-size:clamp(34px, 7.6vw, 78px); line-height:1.08; color:#f4f2ef;
+  text-decoration:none; opacity:.55; transition:opacity .4s var(--ease), letter-spacing .4s var(--ease);
+}
+#menu nav a:hover{opacity:1; letter-spacing:.012em}
+#menu .addr{
+  position:absolute; left:calc(var(--pad) + var(--safe-left)); right:calc(var(--pad) + var(--safe-right));
+  bottom:calc(var(--pad) + var(--safe-bottom)); font-size:12.5px; color:var(--dim); line-height:1.7;
+}
+
+/* ---------- intro + splash ---------- */
+#intro{position:fixed; inset:0; z-index:200; background:#000; display:grid; place-items:center; overflow:hidden}
+#film{width:100%; height:100%; object-fit:cover}
+#intro .veil{position:absolute; inset:0; background:#000; opacity:0; transition:opacity 1.15s ease; pointer-events:none}
+#intro.closing .veil{opacity:1}
+#intro.gone{opacity:0; pointer-events:none; transition:opacity .5s linear}
+#intro .fallback{position:absolute; inset:0; background:radial-gradient(circle at 50% 46%, #14263a 0%, #060a10 42%, #000 72%); opacity:0; pointer-events:none}
+#intro.novideo .fallback{opacity:1}
+.skip{
+  position:absolute; right:calc(var(--pad) + var(--safe-right)); bottom:calc(var(--pad) + var(--safe-bottom));
+  font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(244,242,239,.6);
+  min-height:44px; padding:10px 18px; border:1px solid rgba(244,242,239,.25); border-radius:999px;
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); transition:color .3s, border-color .3s, opacity .3s;
+}
+.skip:hover{color:#fff; border-color:rgba(255,255,255,.7)}
+#intro.closing .skip{opacity:0; pointer-events:none}
+
+#splash{
+  position:fixed; inset:0; z-index:250; background:#000; display:grid; place-items:center; align-content:center; gap:26px;
+  transition:opacity .6s ease;
+}
+#splash.out{opacity:0; pointer-events:none}
+#splash .mark{font-family:var(--serif); font-size:clamp(28px, 4.4vw, 52px); letter-spacing:.005em; color:#f4f2ef; opacity:0; animation:riseIn 1.25s ease .15s forwards}
+#splash .bar{width:clamp(120px, 17vw, 210px); height:1px; background:rgba(244,242,239,.16)}
+#splash .bar s{display:block; width:100%; height:100%; background:#f4f2ef; transform:scaleX(0); transform-origin:left center; transition:transform .55s ease}
+#splash .tag{font-size:10px; letter-spacing:.26em; text-transform:uppercase; color:rgba(244,242,239,.38); opacity:0; animation:riseIn .9s ease .7s forwards}
+@keyframes riseIn{from{opacity:0; transform:translateY(9px)} to{opacity:1; transform:none}}
+
+/* ---------- cursor ---------- */
+#dot{
+  position:fixed; top:0; left:0; z-index:300; width:19px; height:19px; margin:-9.5px; border-radius:50%;
+  background:rgba(214,212,209,.9); mix-blend-mode:difference; border:1px solid transparent; pointer-events:none;
+  transition:width .35s ease, height .35s ease, margin .35s ease, background .35s ease, border-color .35s ease;
+}
+#dot.wide{width:52px; height:52px; margin:-26px; background:rgba(244,242,239,.14); border-color:rgba(244,242,239,.75)}
+@media (hover:none), (pointer:coarse){ #dot{display:none} }
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .bio{max-width:min(420px, calc(100vw - var(--pad) * 2 - var(--safe-left) - var(--safe-right)))}
+  .bio p{font-size:12px}
+  .colophon{font-size:11px}
+  #lit .meta{grid-template-columns:1fr; gap:10px; padding-top:14px}
+  #lit .plate{width:min(92vw, (100dvh - 250px) * .8)}
+  #grid .rows{grid-template-columns:repeat(auto-fill, minmax(150px, 1fr))}
+  #grid{padding-top:calc(var(--pad) * 2.8 + var(--safe-top))}
+}
+@media (max-width:768px){
+  .colophon{display:none}
+  .bio{max-width:calc(100vw - var(--pad) * 2 - var(--safe-left) - var(--safe-right))}
+  #headline{font-size:clamp(22px, 6.4vw, 34px)}
+  #menu nav a{font-size:clamp(28px, 9vw, 54px)}
+  #menu .addr{font-size:11.5px}
+}
+@media (max-width:640px){
+  :root{--hw:min(84vw, 360px); --pad:clamp(12px, 4vw, 18px)}
+  #avatar{width:42px; height:42px}
+  .bio b{font-size:17px}
+  .bio p{font-size:11.5px; line-height:1.55}
+  .cue{display:none}
+  #lit{display:block; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:calc(52px + var(--safe-top)) calc(var(--pad) + var(--safe-right)) calc(var(--pad) + var(--safe-bottom)) calc(var(--pad) + var(--safe-left))}
+  #lit .plate{width:100%; max-width:560px; margin:0 auto}
+  #litTitle{font-size:clamp(20px, 5.6vw, 26px)}
+  #litNote{font-size:12.5px; line-height:1.58}
+  #lit .close{top:8px; right:8px}
+  #grid .rows{grid-template-columns:1fr 1fr; gap:8px}
+  #grid figcaption{opacity:1; transform:none; font-size:13px}
+  #grid{padding:calc(var(--pad) * 2.8 + var(--safe-top)) calc(var(--pad) + var(--safe-right)) calc(var(--pad) * 4 + var(--safe-bottom)) calc(var(--pad) + var(--safe-left))}
+}
+@media (max-width:380px){
+  :root{--hw:min(88vw, 320px)}
+  .bio .who{gap:10px; margin-bottom:10px}
+  .bio p{display:none}
+  #grid .rows{grid-template-columns:1fr}
+  #menu nav{gap:2px}
+  #menu nav a{font-size:clamp(24px, 10vw, 40px)}
+}
+@media (max-height:520px) and (orientation:landscape){
+  .bio, .colophon, .cue{display:none}
+  #headline{font-size:clamp(18px, 4.8vh, 28px)}
+  #lit{padding-top:calc(36px + var(--safe-top))}
+  #lit .meta{padding-top:10px}
+  #lit .plate{width:min(40vw, (100dvh - 80px) * .8)}
+  header{padding-top:calc(8px + var(--safe-top))}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important; transition-duration:.14s !important}
+}
+</style>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://onepaperhoon.com/lab/sokcho/">
+</head>
+<body class="locked">
+
+<div id="scrolltrack"></div>
+
+<div id="stage">
+  <div id="world">
+    <div id="orb"></div>
+    <h1 id="headline"><span class="inner"></span></h1>
+  </div>
+</div>
+<div class="vig"></div>
+
+<div id="grid"><div class="rows" id="rows"></div></div>
+
+<header class="chrome">
+  <a class="wordmark" href="#" aria-label="OnePaperHoon">OnePaper<em>Hoon</em></a>
+  <button id="menuBtn" class="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+    <span class="menu-label">Menu</span>
+    <span class="bars"><i></i><i></i></span>
+  </button>
+</header>
+
+<div class="bio chrome">
+  <div class="who"><img id="avatar" alt="" width="52" height="52"><b id="bioName"></b></div>
+  <p id="bioText"></p>
+</div>
+<div class="colophon chrome" id="colophon"></div>
+<button id="gridBtn" class="gridbtn" aria-label="Toggle grid view"><b></b><b></b><b></b><b></b></button>
+<div class="cue chrome"><s></s><span>Drag to rotate</span></div>
+
+<div id="menu" aria-hidden="true">
+  <nav>
+    <a href="#" data-col="sokcho">Sokcho</a>
+    <a href="#" data-col="kyoto">Kyoto</a>
+    <a href="#" data-grid>Grid View</a>
+  </nav>
+  <div class="addr">Sokcho · August 2026 — 18 frames<br>Kyoto · September 2026 — 74 frames</div>
+</div>
+
+<div id="lit" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="plate" id="plate">
+    <div class="shot"><img id="litImg" alt=""><button class="close" data-close>Close</button></div>
+    <div class="meta">
+      <div><h2 id="litTitle"></h2><div class="where" id="litWhere"></div></div>
+      <p class="note" id="litNote"></p>
+    </div>
+  </div>
+</div>
+
+<div id="intro">
+  <video id="film" muted playsinline autoplay preload="auto" disablepictureinpicture src="intro.mp4"></video>
+  <div class="fallback"></div>
+  <div class="veil"></div>
+  <button class="skip" id="skip">Skip</button>
+</div>
+
+<div id="splash">
+  <div class="mark">OnePaper<em>Hoon</em></div>
+  <div class="bar"><s id="bar"></s></div>
+  <div class="tag">Archive 2026</div>
+</div>
+
+<div id="dot"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ------------------------------------------------------------------ data
+   To change a photo or its text, edit this list. Files live in photos/:
+   {id}.jpg is the full still, {id}_min.webp the thumbnail. */
+var BASE = 'photos/';
+var FILM = 'intro.mp4';
+/* To change a photo or its text, edit these lists. Files live in photos/:
+   {id}.jpg is the full still, {id}_min.webp the thumbnail. */
+var COLLECTIONS = [
+  { key:'sokcho', name:'Sokcho', headline:'Late Summer in Sokcho', label:'Sokcho, Gangwon-do', tag:'Sokcho · August 2026', avatar:'05',
+    about:'Two days on the east coast at the end of August. Eighteen frames of the harbour, the mountains, the sea, and the person I went with.',
+    shots:[
+  {id:'01', title:'The Way Up', place:'Gangwon · Temple road', note:'She walked a few steps behind the others with a hand fan held like a torch. I stayed behind her and let the gate come to us.'},
+  {id:'02', title:'A Hand on the Hip', place:'Gangwon · Temple road', note:'She stopped to take the measure of the gate before going through it. That pause is the whole picture.'},
+  {id:'03', title:'Pine Shade', place:'Gangwon · Lotus pond', note:'Backlit under the pines beside the pond, with the sea a thin blue line behind the trees.'},
+  {id:'04', title:'Mid-Sentence', place:'Gangwon · Stream path', note:'She turned around halfway through a sentence. I pressed the shutter before either of us finished it.'},
+  {id:'05', title:'Cloud Spill', place:'Sokcho · Seorak ridge', note:'Cloud pouring over the ridge like slow water, seen from between the rooftops in town.'},
+  {id:'06', title:'Moon over the Cables', place:'Sokcho · Harbour', note:'The moon came up before the sky had finished going dark. The bridge cables point at it by accident.'},
+  {id:'07', title:'Evening Wave', place:'Sokcho · Harbour', note:'The first of three. One hand on the rail, one in the air, the moon small and early above the bridge.'},
+  {id:'08', title:'One More', place:'Sokcho · Harbour', note:'She asked whether the first one was any good, then waved again without waiting for the answer.'},
+  {id:'09', title:'The Whole Harbour', place:'Sokcho · Harbour', note:'I stepped back to get the boats, the bridge and the water in. She stayed exactly where she was.'},
+  {id:'10', title:'Laughing First', place:'Sokcho · Harbour', note:'The closest frame of the evening, and the only one where she laughed before I asked.'},
+  {id:'11', title:'Grey Weather', place:'Sokcho · Evening sky', note:'A seam of cloud running the length of the sky, with one hillside of trees to hold it down.'},
+  {id:'12', title:'Last Light on Seorak', place:'Sokcho · Seorak ridge', note:'A narrow band of warm light between the cloud and the ridge. It lasted about as long as it took to notice.'},
+  {id:'13', title:'Lit Windows', place:'Sokcho · Seafront', note:'A wall of balconies at dusk. Every warm rectangle is someone else’s holiday.'},
+  {id:'14', title:'Pink Bed', place:'Sokcho · Roadside', note:'A planter by the road that nobody else was looking at. The dark leaves do most of the work.'},
+  {id:'15', title:'Red on Dark', place:'Sokcho · Roadside', note:'The same planter, a few steps along. Shot from the side so the red runs out of the frame.'},
+  {id:'16', title:'Straight Down', place:'Sokcho · Roadside', note:'From directly above, where the flowers stop being a bed and become a pattern.'},
+  {id:'17', title:'The Edge', place:'Sokcho · East Sea', note:'Rounded rock, white water, and a horizon with nothing on it. I waited for one wave that broke properly.'},
+  {id:'18', title:'Small Island', place:'Sokcho · East Sea', note:'A handful of pines on a rock offshore, and one boat passing to give it a scale.'}
+] },
+  { key:'kyoto', name:'Kyoto', headline:'Six Days in Japan', label:'Kyoto, Japan', tag:'Kyoto · September 2026', avatar:'k35',
+    about:'Five nights and six days in Japan, September 2026. Moss gardens, the station and its tower, the roofs of Kiyomizu, and the streets in between.',
+    shots:[
+  {id:'k01', title:"Last Train Light", place:"Osaka · Arrival night", note:"An empty platform a little before midnight. One red signal at the end of it and nothing coming."},
+  {id:'k02', title:"Lamp and Hedge", place:"Osaka · Arrival night", note:"A single street lamp doing all the work for one clipped tree. The first frame I took after landing."},
+  {id:'k03', title:"Stairwell", place:"Osaka · Arrival night", note:"Five landings, five lights, no one on any of them."},
+  {id:'k04', title:"Airport Hotel", place:"Osaka · Arrival night", note:"A white wall, black letters, and one lamp burning a hole in the middle. I liked it more than the room."},
+  {id:'k05', title:"Waiting Seat", place:"Kansai · On the way to Kyoto", note:"Someone alone on a folding chair while a train stood behind them. I had about three seconds before the doors closed."},
+  {id:'k06', title:"Under the Arcade", place:"Kyoto · Shopping arcade", note:"The roof repeats all the way to a vanishing point and the crowd fills in the bottom third."},
+  {id:'k07', title:"One Yolk", place:"Kyoto · Lunch", note:"Shot at the table before anyone was allowed to touch it."},
+  {id:'k08', title:"Red Cab", place:"Kyoto · Downtown", note:"A red taxi nosing out from behind a bus. The colour is the whole reason for the frame."},
+  {id:'k09', title:"Leaning Maple", place:"Kyoto · Ginkaku-ji", note:"One trunk fallen halfway and left that way, with the moss lit underneath it."},
+  {id:'k10', title:"Moss Slope", place:"Kyoto · Ginkaku-ji", note:"Thin trunks, a green floor, and light arriving in patches. I exposed for the patches."},
+  {id:'k11', title:"Silver Pavilion", place:"Kyoto · Ginkaku-ji", note:"The roof against a blown-out sky. I let the sky go and kept the shingles."},
+  {id:'k12', title:"Fence Light", place:"Kyoto · Ginkaku-ji", note:"Late sun landing on a bamboo fence behind the trees. Everything else stayed dark on purpose."},
+  {id:'k13', title:"Green Folds I", place:"Kyoto · Ginkaku-ji", note:"Moss lying over the ground like a blanket someone had just shaken out."},
+  {id:'k14', title:"Green Folds II", place:"Kyoto · Ginkaku-ji", note:"The same hillside looking up, with the trees burning out along the ridge."},
+  {id:'k15', title:"Green Folds III", place:"Kyoto · Ginkaku-ji", note:"One strip of sun crossing the slope. It moved while I was focusing."},
+  {id:'k16', title:"From the Hill", place:"Kyoto · Ginkaku-ji", note:"The pavilion from the path above, with the city starting right behind the trees."},
+  {id:'k17', title:"Raked Sand", place:"Kyoto · Ginkaku-ji", note:"The sand garden from above, where the lines read as a drawing rather than a floor."},
+  {id:'k18', title:"Root", place:"Kyoto · Ginkaku-ji", note:"A root that came out of the moss, changed its mind, and went back in."},
+  {id:'k19', title:"Through the Maple", place:"Kyoto · Ginkaku-ji", note:"The upper storey caught in the last warm light, framed by leaves that have not turned yet."},
+  {id:'k20', title:"Going Down", place:"Kyoto · Higashiyama", note:"Walking back downhill into the sun. One white van and a lot of wires."},
+  {id:'k21', title:"Dance Stage", place:"Kyoto · Yasaka Shrine", note:"Rows of paper lanterns under the roof, before they were switched on."},
+  {id:'k22', title:"Lanterns Lit", place:"Kyoto · Yasaka Shrine", note:"The same stage twenty minutes later, with the sky gone deep blue behind it."},
+  {id:'k23', title:"Walk", place:"Kyoto · Downtown", note:"A green man glowing under the eaves of a covered street."},
+  {id:'k24', title:"Both Hands", place:"Kyoto · Downtown", note:"A taxi driver’s hands on the wheel, seen through the passenger window at a red light."},
+  {id:'k25', title:"Tower, Clearing", place:"Kyoto · Kyoto Tower", note:"The tower with the cloud breaking open behind it."},
+  {id:'k26', title:"Tower, Close", place:"Kyoto · Kyoto Tower", note:"The observation ring from directly below. It looks like something that should rotate."},
+  {id:'k27', title:"Steel and Glass", place:"Kyoto · Kyoto Station", note:"The station roof is a diagram of itself. The escalator gives it a scale."},
+  {id:'k28', title:"Concourse", place:"Kyoto · Kyoto Station", note:"Looking straight down into the station at the busiest hour of the afternoon."},
+  {id:'k29', title:"Tower, Overcast", place:"Kyoto · Kyoto Tower", note:"Same tower, heavier sky. I kept coming back to it all afternoon."},
+  {id:'k30', title:"Two Cameras", place:"Kyoto · Kyoto Station", note:"A figure in the dark glass with a camera raised, and the whole station stacked up behind."},
+  {id:'k31', title:"Checking the Frame", place:"Kyoto · Kyoto Station", note:"He stopped to look at what he had just taken. I took this from the floor above."},
+  {id:'k32', title:"Round Tree", place:"Kyoto · Kyoto Station", note:"A perfectly clipped tree on the roof terrace, and him walking past without looking at it."},
+  {id:'k33', title:"Escalator", place:"Kyoto · Kyoto Station", note:"He was shooting the roof on the way up. I was shooting him."},
+  {id:'k34', title:"Tower, Storm", place:"Kyoto · Kyoto Tower", note:"The sky went the colour of slate and the orange suddenly mattered."},
+  {id:'k35', title:"Tower, Whole", place:"Kyoto · Kyoto Tower", note:"Far enough back to get the city and the hills under it."},
+  {id:'k36', title:"Crossing", place:"Kyoto · Kyoto Station", note:"The intersection in front of the station from the upper deck. One red taxi found the middle."},
+  {id:'k37', title:"Crossing, Wider", place:"Kyoto · Kyoto Station", note:"The same corner with more of the street. The buildings do the framing."},
+  {id:'k38', title:"Stairs from Above", place:"Kyoto · Kyoto Station", note:"Hard light on the landings and everyone reduced to a shadow."},
+  {id:'k39', title:"Three Down", place:"Kyoto · Kyoto Station", note:"Escalators, a strip of sun, and people walking through it one at a time."},
+  {id:'k40', title:"Kyoto View", place:"Kyoto · Downtown", note:"An open-top bus going past at eye level, with its own caption painted on the side."},
+  {id:'k41', title:"Red Cab, Night", place:"Kyoto · Downtown", note:"A slow shutter at a junction. The taxi held still just long enough."},
+  {id:'k42', title:"Over the Wall", place:"Kyoto · Higashiyama", note:"Crape myrtle leaning over a tiled wall under a white sky."},
+  {id:'k43', title:"Canal", place:"Kyoto · Canal side", note:"Shallow water running fast between a stone bank and a wall of leaves."},
+  {id:'k44', title:"Canal Bend", place:"Kyoto · Canal side", note:"Where the water turns under the trees and the old houses come right to the edge."},
+  {id:'k45', title:"Over the River", place:"Kyoto · Higashiyama", note:"Him ahead of me on the bridge, a line of taxis waiting beside him."},
+  {id:'k46', title:"Black Cab", place:"Kyoto · Higashiyama", note:"A black taxi parked under a red lantern post, perfectly side-on."},
+  {id:'k47', title:"Gable", place:"Kyoto · Kiyomizu-dera", note:"The carved end of a roof against a flat sky."},
+  {id:'k48', title:"Two Roofs", place:"Kyoto · Kiyomizu-dera", note:"One roof stepping up behind another. Dark tile, pale wood."},
+  {id:'k49', title:"Vermilion Eaves", place:"Kyoto · Kiyomizu-dera", note:"The underside of the pagoda, where all the colour is."},
+  {id:'k50', title:"Three Corners", place:"Kyoto · Kiyomizu-dera", note:"Three roofs entering the frame from three sides."},
+  {id:'k51', title:"Grey Roof", place:"Kyoto · Kiyomizu-dera", note:"Plaster, tile, and a long slope of roof with nothing interrupting it."},
+  {id:'k52', title:"Above the City", place:"Kyoto · Kiyomizu-dera", note:"The gate on the right edge of the frame and the whole of Kyoto filling the rest."},
+  {id:'k53', title:"Gold Fittings", place:"Kyoto · Kiyomizu-dera", note:"Looking up at the eave ends. The gold only shows from underneath."},
+  {id:'k54', title:"Eaves and City", place:"Kyoto · Kiyomizu-dera", note:"A roof corner pointing at the town below, with weather coming over the hills."},
+  {id:'k55', title:"Three Storeys", place:"Kyoto · Kiyomizu-dera", note:"The pagoda in full, shot from the side so the roofs stack."},
+  {id:'k56', title:"Gilded Gable", place:"Kyoto · Kiyomizu-dera", note:"The one bright thing in a very dark roof."},
+  {id:'k57', title:"Otowa, Above", place:"Kyoto · Kiyomizu-dera", note:"The spring from the stage, with the queue wrapped around it."},
+  {id:'k58', title:"Otowa, Closer", place:"Kyoto · Kiyomizu-dera", note:"People taking turns at the water. From up here it looks like a model."},
+  {id:'k59', title:"On the Steps", place:"Kyoto · Kiyomizu-dera", note:"Two friends stopping on the stairs to look at a phone. One of them in kimono."},
+  {id:'k60', title:"The Stage", place:"Kyoto · Kiyomizu-dera", note:"The main hall on its timber frame, railings full of people."},
+  {id:'k61', title:"Side by Side", place:"Kyoto · Kiyomizu-dera", note:"A couple in yukata walking up the path ahead of me."},
+  {id:'k62', title:"Across the Valley", place:"Kyoto · Kiyomizu-dera", note:"The small pagoda on its hill with the city laid out behind."},
+  {id:'k63', title:"Fern", place:"Kyoto · Kiyomizu-dera", note:"Beside the path, at knee height, and better lit than anything else that hour."},
+  {id:'k64', title:"Pagoda in the Trees", place:"Kyoto · Kiyomizu-dera", note:"The same pagoda from below, mostly hidden."},
+  {id:'k65', title:"Stone Lantern", place:"Kyoto · Kiyomizu-dera", note:"Moss has taken the cap and is working on the rest."},
+  {id:'k66', title:"Koyasu Pagoda", place:"Kyoto · Kiyomizu-dera", note:"Up close at last. The orange is warmer than it looks from across the valley."},
+  {id:'k67', title:"Cedar Gap", place:"Kyoto · Kiyomizu-dera", note:"A break in the trees on the way back down."},
+  {id:'k68', title:"Small Hall", place:"Kyoto · Kiyomizu-dera", note:"A side hall under heavy shade, with a noticeboard nobody was reading."},
+  {id:'k69', title:"Yellow Car", place:"Kyoto · Higashiyama", note:"Him walking down a back street past the only bright thing on it."},
+  {id:'k70', title:"Porch Lamp", place:"Kyoto · Higashiyama", note:"A lamp left on in daylight beside a closed shutter."},
+  {id:'k71', title:"After School", place:"Kyoto · Higashiyama", note:"Three backpacks heading home down the middle of the pavement."},
+  {id:'k72', title:"Stream", place:"Kyoto · Higashiyama", note:"A small bridge at the end of a narrow stream, wires overhead."},
+  {id:'k73', title:"Shared Path", place:"Kyoto · Higashiyama", note:"He stopped at the corner to frame something. The sign did the rest."},
+  {id:'k74', title:"Review", place:"Kyoto · Higashiyama", note:"Checking the back of the camera on a rusty footbridge. The last frame I kept."}
+    ] }
+];
+var COL = COLLECTIONS[0], SHOTS = COL.shots, N = SHOTS.length, buildId = 0;
+
+/* ------------------------------------------------------------------ dom */
+var $ = function(id){ return document.getElementById(id); };
+var body = document.body, root = document.documentElement;
+var stage = $('stage'), world = $('world'), orb = $('orb'), headline = $('headline');
+var rows = $('rows'), plate = $('plate'), litImg = $('litImg');
+var splash = $('splash'), bar = $('bar'), intro = $('intro'), film = $('film');
+var born = performance.now();
+root.style.overflow = 'hidden';
+
+function setHeadline(text){
+  var inner = headline.querySelector('.inner');
+  inner.textContent = '';
+  text.split(' ').forEach(function(w, i){
+    if (i) inner.appendChild(document.createTextNode(' '));
+    var s = document.createElement('span'); s.style.setProperty('--i', i); s.textContent = w; inner.appendChild(s);
+  });
+}
+
+/* ------------------------------------------------------------------ sphere */
+var GA = Math.PI * (3 - Math.sqrt(5));
+var cards = [], gridFigs = [];
+function build(col){
+  buildId++;
+  COL = col; SHOTS = col.shots; N = SHOTS.length;
+  orb.textContent = ''; rows.textContent = ''; cards = []; gridFigs = [];
+  setHeadline(col.headline);
+  $('bioName').textContent = col.label; $('bioText').textContent = col.about;
+  $('colophon').textContent = col.tag; $('avatar').alt = col.name;
+  shrink(BASE + col.avatar + '_min.webp', 160, function(url){ if (COL === col) $('avatar').src = url; });
+  for (var i = 0; i < N; i++) {
+    var y = 1 - (i / (N - 1)) * 2;
+    var rad = Math.sqrt(Math.max(0, 1 - y * y));
+    var theta = i * GA;
+    var x = Math.cos(theta) * rad, z = Math.sin(theta) * rad;
+    var el = document.createElement('div');
+    el.className = 'card tall'; el.dataset.idx = i;
+    el.innerHTML = '<figure><img alt="" draggable="false"></figure>';
+    orb.appendChild(el);
+    cards.push({el:el, img:el.querySelector('img'), x:x, y:y, z:z,
+      lat:Math.asin(y) * 180 / Math.PI, lon:Math.atan2(x, z) * 180 / Math.PI, op:-1, d:-1});
+    var fig = document.createElement('figure'); fig.dataset.idx = i;
+    fig.innerHTML = '<img alt="" loading="lazy"><figcaption></figcaption>';
+    fig.querySelector('figcaption').textContent = SHOTS[i].title;
+    fig.querySelector('img').alt = SHOTS[i].title;
+    rows.appendChild(fig); gridFigs.push(fig);
+  }
+  document.querySelectorAll('#menu [data-col]').forEach(function(a){ a.classList.toggle('current', a.dataset.col === col.key); });
+}
+
+var R = 300, persp = 1150, lastW = 0, lastH = 0;
+function layout(force){
+  var w = window.innerWidth, h = window.innerHeight;
+  if (!force && Math.abs(w - lastW) < 20 && Math.abs(h - lastH) < 20) return;
+  lastW = w; lastH = h;
+  var hr = w <= 380 ? .38 : w <= 640 ? .42 : .46;
+  var wr = w <= 380 ? .48 : w <= 640 ? .52 : .58;
+  var floor = w <= 380 ? 108 : w <= 640 ? 120 : 155;
+  R = Math.max(floor, Math.min(480, h * hr, w * wr));
+  /* every card here is portrait, so they are narrower than the reference landscape cards */
+  /* bigger collections get smaller cards so the sphere keeps a similar coverage */
+  var scale = (w <= 380 ? .36 : w <= 640 ? .37 : .38) * Math.pow(18 / Math.max(18, N), .4);
+  var cw = Math.round(Math.max(30, R * scale));
+  root.style.setProperty('--cw', cw + 'px');
+  persp = w <= 380 ? 620 : w <= 640 ? 760 : w <= 900 ? 920 : 1150;
+  root.style.setProperty('--persp', persp + 'px');
+  for (var i = 0; i < N; i++) {
+    var c = cards[i];
+    c.el.style.transform = 'translate3d(' + (c.x * R).toFixed(2) + 'px,' + (-c.y * R).toFixed(2) + 'px,' + (c.z * R).toFixed(2) + 'px) rotateY(' + c.lon.toFixed(3) + 'deg) rotateX(' + c.lat.toFixed(3) + 'deg)';
+  }
+}
+window.addEventListener('resize', function(){ layout(false); });
+window.addEventListener('orientationchange', function(){ setTimeout(function(){ layout(true); }, 220); });
+if (window.visualViewport) {
+  visualViewport.addEventListener('resize', function(){ layout(false); });
+  visualViewport.addEventListener('scroll', function(){ layout(false); });
+}
+
+/* ------------------------------------------------------------------ loading */
+var total = SHOTS.length + 1, loaded = 0, splashDone = false, shrunk = {};
+function decodeMax(){ var w = window.innerWidth; return w <= 380 ? 420 : w <= 640 ? 520 : w <= 900 ? 640 : 760; }
+function tick(){
+  loaded++;
+  bar.style.transform = 'scaleX(' + Math.min(1, loaded / total) + ')';
+  if (loaded >= total) finishSplash();
+}
+function shrink(src, max, done){
+  var key = src + '@' + max;
+  if (shrunk[key]) return void done(shrunk[key]);
+  var finish = function(url){ shrunk[key] = url; done(url); };
+  var probe = new Image(); probe.crossOrigin = 'anonymous'; probe.decoding = 'async';
+  probe.onload = function(){
+    if (probe.naturalWidth <= max) return finish(src);
+    try {
+      var cv = document.createElement('canvas');
+      cv.width = max; cv.height = Math.round(probe.naturalHeight * max / probe.naturalWidth);
+      cv.getContext('2d').drawImage(probe, 0, 0, cv.width, cv.height);
+      cv.toBlob(function(b){ finish(b ? URL.createObjectURL(b) : src); }, 'image/webp', .88);
+    } catch (e) { finish(src); }
+  };
+  probe.onerror = function(){ done(src); };
+  probe.src = src;
+}
+function loadShots(count){
+  var id = buildId, max = Math.min(decodeMax(), N > 40 ? 520 : 9999);
+  SHOTS.forEach(function(s, i){
+    shrink(BASE + s.id + '_min.webp', max, function(url){
+      if (id !== buildId) return;
+      var c = cards[i], counted = false;
+      function once(){ if (!counted) { counted = true; c.img.classList.add('in'); if (count) tick(); } }
+      c.img.onload = once; c.img.onerror = once;
+      c.img.src = url; c.src = url;
+      gridFigs[i].querySelector('img').src = url;
+    });
+  });
+}
+build(COL); layout(true); loadShots(true);
+(function(){
+  var counted = false;
+  function once(){ if (!counted) { counted = true; tick(); } }
+  if (film.readyState >= 3) once();
+  ['canplaythrough', 'loadeddata', 'error'].forEach(function(ev){ film.addEventListener(ev, once, {once:true}); });
+})();
+setTimeout(finishSplash, 9000);
+
+function finishSplash(){
+  if (splashDone) return;
+  var wait = 1150 - (performance.now() - born);
+  if (wait > 0) return void setTimeout(finishSplash, wait);
+  splashDone = true;
+  bar.style.transform = 'scaleX(1)';
+  setTimeout(function(){
+    splash.classList.add('out');
+    setTimeout(function(){ splash.remove(); }, 950);
+    startFilm();
+  }, 420);
+}
+
+/* ------------------------------------------------------------------ intro film */
+var revealed = false, filmFailed = false, revealTimer = 0;
+function reveal(){
+  if (revealed) return; revealed = true;
+  clearTimeout(revealTimer);
+  intro.classList.add('closing');
+  body.classList.remove('locked');
+  root.style.overflow = '';
+  layout(true);
+  requestAnimationFrame(function(){ layout(true); });
+  setTimeout(function(){
+    layout(true);
+    body.classList.add('revealed');
+    intro.classList.add('gone');
+    try { film.pause(); } catch (e) {}
+    setTimeout(function(){ intro.remove(); }, 700);
+  }, 1000);
+}
+function startFilm(){
+  if (revealed) return;
+  if (filmFailed) { intro.classList.add('novideo'); return void setTimeout(reveal, 1300); }
+  film.muted = true; film.defaultMuted = true; film.playsInline = true; film.setAttribute('webkit-playsinline', '');
+  try { if (film.currentTime > .05) film.currentTime = 0; } catch (e) {}
+  film.playbackRate = 2;
+  setTimeout(reveal, 14000);
+  var p = film.play();
+  if (p && p.catch) p.catch(blocked);
+}
+function blocked(){
+  var kick = function(){
+    ['pointerdown', 'keydown', 'touchstart'].forEach(function(ev){ window.removeEventListener(ev, kick); });
+    var p = film.play(); if (p && p.catch) p.catch(function(){});
+    setTimeout(function(){ if (film.paused) reveal(); }, 2600);
+  };
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function(ev){ window.addEventListener(ev, kick); });
+}
+film.addEventListener('play', function(){ film.playbackRate = 2; });
+film.addEventListener('playing', function(){
+  if (!splashDone || revealed) return;
+  var left = (film.duration - film.currentTime - .45) / 2;
+  if (!isFinite(left)) return;
+  clearTimeout(revealTimer);
+  revealTimer = setTimeout(reveal, Math.max(300, left * 1000));
+});
+film.addEventListener('ended', reveal);
+film.addEventListener('error', function(){
+  filmFailed = true;
+  if (splashDone && !revealed) { intro.classList.add('novideo'); setTimeout(reveal, 1300); }
+});
+$('skip').addEventListener('click', reveal);
+
+/* ------------------------------------------------------------------ camera loop */
+var spin = 0, tilt = -4, camZ = 0, dragX = 0, dragY = 0, velX = 0, velY = 0, PITCH = 78;
+var SCROLL = .7;      /* scroll distance of the zoom, in viewport heights */
+var TURN = .24;       /* degrees of rotation per dragged pixel */
+var GLIDE = .965;     /* momentum kept per frame after release */
+var focused = -1, dragging = false, litOpen = false;
+var D2R = Math.PI / 180;
+function progress(){ return Math.max(0, Math.min(1, window.scrollY / (window.innerHeight * SCROLL))); }
+function frame(){
+  if (!dragging && !litOpen) {
+    dragX += velX; dragY += velY; velX *= GLIDE; velY *= GLIDE;
+    if (Math.abs(velX) < .002) velX = 0;
+    if (Math.abs(velY) < .002) velY = 0;
+  }
+  if (tilt + dragY > PITCH) { dragY = PITCH - tilt; velY = 0; }
+  if (tilt + dragY < -PITCH) { dragY = -PITCH - tilt; velY = 0; }
+  var p = progress();
+  camZ += (p * Math.min(300, R * .62) - camZ) * .075;
+  var sx = tilt + dragY, sy = spin + dragX;
+  world.style.transform = 'translateZ(' + camZ.toFixed(2) + 'px) rotateY(' + sy.toFixed(3) + 'deg) rotateX(' + sx.toFixed(3) + 'deg)';
+  headline.style.transform = 'rotateX(' + (-sx).toFixed(3) + 'deg) rotateY(' + (-sy).toFixed(3) + 'deg) translateZ(' + (R * .62).toFixed(2) + 'px)';
+  headline.style.opacity = Math.max(0, 1 - p * 1.1).toFixed(3);
+  body.classList.toggle('deep', p > .22);
+
+  var cx = Math.cos(sx * D2R), sxn = Math.sin(sx * D2R), cy = Math.cos(sy * D2R), syn = Math.sin(sy * D2R);
+  var shade = 1 - Math.min(1, p * 1.6), near = persp * .66;
+  for (var i = 0; i < N; i++) {
+    var c = cards[i];
+    var py = -c.y, pz = c.z;
+    var z1 = py * sxn + pz * cx;            /* rotateX */
+    var zf = -c.x * syn + z1 * cy;          /* rotateY */
+    var base = .14 + .86 * Math.pow((zf + 1) / 2, .85);
+    var dim = shade * (1 - base);
+    var absZ = zf * R + camZ;
+    var fade = absZ > near ? Math.max(0, 1 - (absZ - near) / 190) : 1;
+    if (focused >= 0) { dim = Math.min(1, dim + .78); if (i === focused) fade = 0; }
+    var d = Math.round(dim * 1000) / 1000, o = Math.round(fade * 1000) / 1000;
+    if (d !== c.d) { c.d = d; c.el.style.setProperty('--d', d); }
+    if (o !== c.op) { c.op = o; c.el.style.opacity = o; }
+  }
+}
+frame();
+(function loop(){ frame(); requestAnimationFrame(loop); })();
+
+window.addEventListener('scroll', function(){
+  var max = Math.round(window.innerHeight * SCROLL);
+  if (window.scrollY > max) window.scrollTo(0, max);
+}, {passive:true});
+
+/* ------------------------------------------------------------------ drag */
+var coarse = window.matchMedia('(pointer:coarse)').matches;
+var drag = null;
+stage.addEventListener('pointerdown', function(e){
+  if (litOpen || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  var card = e.target.closest ? e.target.closest('.card') : null;
+  drag = {id:e.pointerId, x0:e.clientX, y0:e.clientY, lx:e.clientX, ly:e.clientY, card:card, moved:0,
+          touch:e.pointerType === 'touch', captured:false, cancelled:false};
+  if (!drag.touch) { capture(e); }
+});
+function capture(e){
+  drag.captured = true; dragging = true; velX = velY = 0;
+  try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+}
+stage.addEventListener('pointermove', function(e){
+  if (!drag || e.pointerId !== drag.id || drag.cancelled) return;
+  var tx = e.clientX - drag.x0, ty = e.clientY - drag.y0;
+  drag.moved = Math.max(drag.moved, Math.hypot(tx, ty));
+  if (drag.touch && !drag.captured) {
+    if (drag.moved < 10) return;
+    if (Math.abs(ty) > Math.abs(tx) * 1.15) { drag.cancelled = true; return; }
+    capture(e); drag.lx = e.clientX; drag.ly = e.clientY;
+  }
+  var dx = e.clientX - drag.lx, dy = e.clientY - drag.ly;
+  drag.lx = e.clientX; drag.ly = e.clientY;
+  velX = dx * TURN; velY = -dy * TURN;
+  dragX += velX; dragY += velY;
+});
+function endDrag(e){
+  if (!drag || e.pointerId !== drag.id) return;
+  var d = drag; drag = null; dragging = false;
+  try { stage.releasePointerCapture(e.pointerId); } catch (err) {}
+  if (e.type === 'pointercancel' || d.cancelled) return;
+  if (d.moved <= (coarse ? 14 : 6) && d.card) { velX = velY = 0; openShot(+d.card.dataset.idx, d.card); }
+}
+stage.addEventListener('pointerup', endDrag);
+stage.addEventListener('pointercancel', endDrag);
+
+/* ------------------------------------------------------------------ lightbox */
+var openToken = 0, sourceEl = null, closeTimer = 0;
+function flipFrom(el){
+  var a = el.getBoundingClientRect(), b = plate.getBoundingClientRect();
+  var s = Math.max(.04, a.width / b.width);
+  var dx = (a.left + a.width / 2) - (b.left + b.width / 2);
+  var dy = (a.top + a.height / 2) - b.top - s * b.width * 1.25 / 2;   /* plate scales from its top centre */
+  return 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
+}
+function openShot(idx, el){
+  var s = SHOTS[idx], token = ++openToken;
+  clearTimeout(closeTimer);
+  sourceEl = el;
+  litImg.src = cards[idx].src || (BASE + s.id + '_min.webp'); litImg.alt = s.title;
+  var full = new Image();
+  full.onload = function(){ if (token === openToken && litOpen) litImg.src = full.src; };
+  full.src = BASE + s.id + '.jpg';
+  $('litTitle').textContent = s.title; $('litWhere').textContent = s.place; $('litNote').textContent = s.note;
+  focused = el.classList.contains('card') ? idx : -1;
+  litOpen = true; body.classList.add('lit'); $('lit').setAttribute('aria-hidden', 'false');
+  root.style.overflow = 'hidden';
+  $('lit').scrollTop = 0;
+  plate.style.transition = 'none'; plate.style.transform = ''; plate.style.opacity = '';
+  plate.style.transform = flipFrom(el); plate.style.opacity = '0';
+  void plate.offsetWidth;
+  plate.style.transition = ''; plate.style.transform = ''; plate.style.opacity = '';
+}
+function closeShot(){
+  if (!litOpen) return;
+  openToken++; litOpen = false; focused = -1;
+  body.classList.remove('lit'); $('lit').setAttribute('aria-hidden', 'true');
+  root.style.overflow = '';
+  if (sourceEl && document.body.contains(sourceEl)) { plate.style.transform = flipFrom(sourceEl); plate.style.opacity = '0'; }
+  closeTimer = setTimeout(function(){
+    plate.style.transition = 'none'; plate.style.transform = ''; plate.style.opacity = '';
+    void plate.offsetWidth; plate.style.transition = '';
+  }, 640);
+}
+$('lit').addEventListener('click', function(e){ if (e.target.closest('[data-close]')) closeShot(); });
+rows.addEventListener('click', function(e){
+  var f = e.target.closest('figure'); if (f) openShot(+f.dataset.idx, f);
+});
+
+/* ------------------------------------------------------------------ grid + menu */
+function setGrid(on){ body.classList.toggle('gridview', on); }
+$('gridBtn').addEventListener('click', function(){ setGrid(!body.classList.contains('gridview')); });
+var menuBtn = $('menuBtn');
+function setMenu(on){
+  body.classList.toggle('menuopen', on);
+  menuBtn.setAttribute('aria-expanded', on ? 'true' : 'false');
+  menuBtn.setAttribute('aria-label', on ? 'Close menu' : 'Open menu');
+  $('menu').setAttribute('aria-hidden', on ? 'false' : 'true');
+}
+menuBtn.addEventListener('click', function(){ setMenu(!body.classList.contains('menuopen')); });
+$('menu').addEventListener('click', function(e){
+  var a = e.target.closest('a'); if (!a) return;
+  e.preventDefault();
+  var col = COLLECTIONS.filter(function(c){ return c.key === a.dataset.col; })[0];
+  if (col) { setGrid(false); switchTo(col); } else setGrid(a.hasAttribute('data-grid'));
+  setMenu(false);
+});
+function switchTo(col){
+  if (col === COL) return;
+  if (litOpen) closeShot();
+  body.classList.add('switching');
+  setTimeout(function(){
+    window.scrollTo(0, 0);
+    dragX = dragY = velX = velY = 0; focused = -1;
+    build(col); layout(true); loadShots(false);
+    requestAnimationFrame(function(){ body.classList.remove('switching'); });
+  }, 520);
+}
+document.querySelector('.wordmark').addEventListener('click', function(e){ e.preventDefault(); setMenu(false); setGrid(false); });
+window.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  if (litOpen) closeShot();
+  else if (body.classList.contains('menuopen')) setMenu(false);
+  else if (body.classList.contains('gridview')) setGrid(false);
+});
+
+/* ------------------------------------------------------------------ cursor */
+(function(){
+  if (!window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  var dot = $('dot'), tx = -100, ty = -100, x = -100, y = -100;
+  window.addEventListener('pointermove', function(e){
+    tx = e.clientX; ty = e.clientY;
+    var t = e.target.closest ? e.target.closest('.card, a, button, #grid figure') : null;
+    dot.classList.toggle('wide', !!t);
+  }, {passive:true});
+  (function follow(){
+    x += (tx - x) * .2; y += (ty - y) * .2;
+    dot.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+    requestAnimationFrame(follow);
+  })();
+})();
+})();
+</script>
+<a href="/notes/photo-sphere-archive" style="position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:9999;padding:2px 10px;border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font:500 10px/1.5 system-ui,sans-serif;text-decoration:none;white-space:nowrap">← onepaperhoon · 만든 과정</a>
+</body>
+</html>
