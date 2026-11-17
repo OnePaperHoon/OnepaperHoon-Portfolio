@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 import Base from "@/layouts/Base.astro";
 import PaperSlot from "@/components/PaperSlot.astro";
 import WorkCard from "@/components/WorkCard.astro";
-import { fetchFeedlineStatus, feedlineLine } from "@/lib/feedline";
+import { fetchAllLiveStatus, LIVE_IDS } from "@/lib/live";
 
 const works = (await getCollection("work", ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
 const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
@@ -11,10 +11,15 @@ const featured = works.find((work) => work.data.featured && work.data.cover);
 const live = works.filter((work) => work.data.status === "live");
 const packages = works.filter((work) => work.data.links.npm);
 const stack = [...new Set(works.flatMap((work) => work.data.stack))].slice(0, 10);
-// FeedLine의 실제 상태: 빌드 시점의 숫자를 심어 두고, 브라우저가 가능하면 지금 값으로 바꿉니다.
-const feedline = await fetchFeedlineStatus();
+// 운영 중인 서비스들의 실제 상태: 빌드 시점의 값을 심어 두고, 브라우저가 가능하면 지금 값으로 바꿉니다 (src/lib/live.ts).
+const status = await fetchAllLiveStatus();
+const liveIds = live.map((work) => work.id).filter((id) => LIVE_IDS.includes(id));
+const liveLines = Object.fromEntries(liveIds.map((id) => [id, status[id]?.line ?? ""]));
+const hasLive = Object.values(status).length > 0;
+// 종이에 인쇄할 본문. {id} 자리는 브라우저가 새 값을 받으면 갈아 끼웁니다.
+const nowTemplate = live.map((work) => `· ${work.data.title}${liveIds.includes(work.id) ? `  — {${work.id}}` : ""}`).join("\n");
 const builtAt = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
-const liveNote = (id: string) => (id === "feedline" && feedline ? feedlineLine(feedline) : "");
+const liveNote = (id: string) => status[id]?.line ?? "";
 const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-", ".");
 ---
 
@@ -68,7 +73,7 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
         </div>
         <p class="numbers__note headline--center" data-rise>크게 부풀릴 숫자는 없습니다. 대신 <strong>전부 실제로 돌아갑니다.</strong></p>
       </div>
-      <PaperSlot class="numbers__slot" label="Now running" title="지금 돌아가는 것" body={live.map((work) => `· ${work.data.title}${liveNote(work.id) ? `  — ${liveNote(work.id)}` : ""}`).join("\n")} foot={feedline ? `02 · ${builtAt} 기준` : "02"} tilt="-5,14,4" live={feedline ? "feedline" : undefined} />
+      <PaperSlot class="numbers__slot" label="Now running" title="지금 돌아가는 것" body={nowTemplate.replace(/\{(\w+)\}/g, (_, id) => liveLines[id]).replace(/  — $/gm, "")} foot={hasLive ? `02 · ${builtAt} 기준` : "02"} tilt="-5,14,4" live={liveIds.length ? liveIds.join(",") : undefined} liveTemplate={liveIds.length ? nowTemplate : undefined} liveLines={liveIds.length ? JSON.stringify(liveLines) : undefined} />
     </div>
   </section>
 
@@ -91,7 +96,7 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
         <p class="cell__label">Always on</p>
         <h3 class="cell__title">지금 이 순간에도 <strong>돌아가고 있는 것들.</strong></h3>
         <ul class="now-list">
-          {live.map((work) => <li><i></i><strong>{work.data.title}</strong><span>{work.data.kind}</span>{liveNote(work.id) && <em class="live" data-live="feedline">{liveNote(work.id)} · {builtAt} 기준</em>}</li>)}
+          {live.map((work) => <li><i></i><strong>{work.data.title}</strong><span>{work.data.kind}</span>{liveNote(work.id) && <em class="live" data-live={work.id}>{liveNote(work.id)} · {builtAt} 기준</em>}</li>)}
         </ul>
       </article>
     </div>

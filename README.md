@@ -6,6 +6,6 @@
 
 - **Astro** 정적 사이트 + **three.js** 종이 한 장
 - 콘텐츠는 마크다운: `src/content/work/`, `src/content/notes/`
-- **Cloudflare Workers** Static Assets로 배포
+- Contabo VPS의 **Caddy**가 정적 파일을 서빙. `main`에 푸시하면 GitHub Actions가 SSH로 올림
 
 작업·노트 추가, 배포 방법은 [DEPLOY.md](./DEPLOY.md)를 보세요.

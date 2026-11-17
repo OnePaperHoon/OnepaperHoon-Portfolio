@@ -274,6 +274,132 @@ function mountRoulette(stage: HTMLElement) {
 }
 
 // ----------------------------------------------------------------
+// ---------------------------------------------------------------- 소복: 실제 서비스를 고정 자료로 연다
+function mountSobok(stage: HTMLElement) {
+  stage.replaceChildren();
+  const frame = el("div", "embed");
+  const iframe = document.createElement("iframe");
+  iframe.title = "소복 — 2024년 11월 수도권 폭설 재현";
+  iframe.loading = "lazy";
+  iframe.referrerPolicy = "strict-origin-when-cross-origin";
+  iframe.allow = "fullscreen";
+  const src = "https://sobok.onepaperhoon.com/?fixture=2024112712&t=2024112806";
+  const open = el("a", "replay__option is-primary", "새 창에서 크게 보기 ↗") as unknown as HTMLAnchorElement;
+  open.href = src; open.target = "_blank"; open.rel = "noreferrer";
+  const foot = el("div", "yen__foot");
+  foot.append(el("p", "yen__tally", "3D 지도는 WebGL 을 쓰므로 모바일에서는 무거울 수 있습니다."), open);
+  frame.append(iframe);
+  stage.append(frame, foot);
+  // 보일 때 비로소 싣는다. 무거운 WebGL 앱을 페이지 로드 때부터 돌리지 않기 위해.
+  whenVisible(stage, () => { iframe.src = src; });
+}
+
+// ---------------------------------------------------------------- Lyrcing: 가사가 별자리가 되는 화면 (Canvas 2D)
+const LYRIC_LINES = [
+  "한 장에서 시작해", "매일 돌아가는 서비스로", "흩어진 정보와", "끝없는 기다림을", "믿을 수 있는 상태와", "조용한 신호로",
+];
+function mountLyrcing(stage: HTMLElement) {
+  stage.replaceChildren();
+  const canvas = document.createElement("canvas");
+  canvas.className = "lyric-sky";
+  canvas.setAttribute("aria-label", "가사 별자리 데모");
+  const foot = el("div", "yen__foot");
+  const caption = el("p", "yen__tally", "");
+  const replay = el("button", "replay__option", "다시");
+  replay.type = "button";
+  foot.append(caption, replay);
+  stage.append(canvas, foot);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  type Star = { x: number; y: number; word: string; born: number; line: number };
+  const BPM = 92, beat = 60000 / BPM;
+  let stars: Star[] = [], line = 0, word = 0, lastBeat = 0, raf = 0, start = 0, running = false;
+  let size = { w: 0, h: 0, dpr: 1 };
+  const resize = () => {
+    const rect = canvas.getBoundingClientRect();
+    size = { w: rect.width, h: rect.height, dpr: Math.min(2, window.devicePixelRatio || 1) };
+    canvas.width = size.w * size.dpr; canvas.height = size.h * size.dpr;
+  };
+  const rnd = (seed: number) => { const x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); };
+  const place = (lineIndex: number, wordIndex: number, count: number): [number, number] => {
+    // 한 줄은 하늘을 가로지르는 느슨한 호. 줄마다 높이가 다르다.
+    const t = (wordIndex + 0.5) / count;
+    const x = size.w * (0.1 + 0.8 * t) + (rnd(lineIndex * 7 + wordIndex) - 0.5) * size.w * 0.06;
+    const y = size.h * (0.22 + 0.56 * rnd(lineIndex * 13 + 1)) + Math.sin(t * Math.PI) * -size.h * 0.12 + (rnd(lineIndex * 3 + wordIndex * 5) - 0.5) * size.h * 0.1;
+    return [x, y];
+  };
+  const tick = (now: number) => {
+    if (!running) return;
+    if (!start) { start = now; lastBeat = now - beat; }
+    if (now - lastBeat >= beat) {
+      lastBeat += beat;
+      const words = LYRIC_LINES[line].split(" ");
+      if (word < words.length) {
+        const [x, y] = place(line, word, words.length);
+        stars.push({ x, y, word: words[word], born: now, line });
+        word += 1;
+      } else {
+        line += 1; word = 0;
+        if (line >= LYRIC_LINES.length) { line = 0; stars = stars.filter((s) => now - s.born < beat * 4); }
+      }
+      caption.textContent = `${BPM} BPM · ${LYRIC_LINES[line]}`;
+    }
+    draw(now);
+    raf = requestAnimationFrame(tick);
+  };
+  const draw = (now: number) => {
+    const { w, h, dpr } = size;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const sky = ctx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, "#0b0a1c"); sky.addColorStop(1, "#1d1b3f");
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+    // 배경 별
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    for (let i = 0; i < 70; i++) { const tw = 0.6 + 0.4 * Math.sin(now / 900 + i); ctx.globalAlpha = 0.25 * tw; ctx.beginPath(); ctx.arc(rnd(i) * w, rnd(i + 100) * h, 1 + rnd(i + 200), 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    const pulse = 1 - ((now - lastBeat) % beat) / beat;
+    // 줄마다 선으로 잇는다. 끝난 줄은 서서히 사라진다.
+    const byLine = new Map<number, Star[]>();
+    for (const s of stars) byLine.set(s.line, [...(byLine.get(s.line) ?? []), s]);
+    for (const [index, group] of byLine) {
+      const age = now - group[group.length - 1].born, fade = index === line ? 1 : Math.max(0, 1 - age / (beat * 6));
+      if (fade <= 0) continue;
+      ctx.strokeStyle = `rgba(190, 200, 255, ${0.35 * fade})`; ctx.lineWidth = 1;
+      ctx.beginPath(); group.forEach((s, i) => (i ? ctx.lineTo(s.x, s.y) : ctx.moveTo(s.x, s.y))); ctx.stroke();
+      for (const s of group) {
+        const grow = Math.min(1, (now - s.born) / 260), r = (3 + 4 * grow) * (s === stars[stars.length - 1] ? 1 + pulse * 0.5 : 1);
+        ctx.fillStyle = `rgba(255, 244, 200, ${fade})`;
+        ctx.shadowColor = "rgba(255, 220, 140, 0.9)"; ctx.shadowBlur = 14 * grow;
+        ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.font = `700 ${Math.max(13, Math.min(22, w / 32))}px ${getComputedStyle(document.body).fontFamily}`;
+        ctx.textAlign = "center"; ctx.textBaseline = "top";
+        ctx.fillStyle = `rgba(255,255,255,${0.92 * fade * grow})`;
+        ctx.fillText(s.word, s.x, s.y + r + 6);
+      }
+    }
+    stars = stars.filter((s) => s.line === line || now - s.born < beat * 10);
+  };
+  const reset = () => { stars = []; line = 0; word = 0; start = 0; };
+  replay.addEventListener("click", reset);
+  const ro = new ResizeObserver(() => { resize(); if (!running) draw(performance.now()); });
+  ro.observe(canvas);
+  resize();
+  if (reduced()) {
+    // 동작 줄이기: 첫 두 줄을 한 번에 그려 둔다.
+    LYRIC_LINES.slice(0, 2).forEach((l, li) => l.split(" ").forEach((wd, wi, arr) => { const [x, y] = place(li, wi, arr.length); stars.push({ x, y, word: wd, born: 0, line: li }); }));
+    line = 1; lastBeat = 0; draw(performance.now());
+    caption.textContent = "동작 줄이기가 켜져 있어 멈춘 화면으로 보여 줍니다.";
+    return;
+  }
+  new IntersectionObserver(([entry]) => {
+    running = entry.isIntersecting && stage.isConnected;
+    cancelAnimationFrame(raf);
+    if (running) raf = requestAnimationFrame(tick);
+  }, { threshold: 0.3 }).observe(stage);
+}
+
 function whenVisible(target: HTMLElement, run: () => void) {
   const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { observer.disconnect(); run(); } }, { threshold: 0.4 });
   observer.observe(target);
@@ -288,5 +414,7 @@ export function mountDemos() {
     if (TOOLS[name]) mountInit(stage, TOOLS[name]);
     else if (name === "yen-board") mountYen(stage);
     else if (name === "roulette") mountRoulette(stage);
+    else if (name === "sobok-replay") mountSobok(stage);
+    else if (name === "lyrcing-sky") mountLyrcing(stage);
   }
 }

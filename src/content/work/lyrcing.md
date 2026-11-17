@@ -12,6 +12,7 @@ links:
   repo: https://github.com/OnePaperHoon/lyrcing-releases
 cover: /covers/lyrcing.jpg
 tint: "#2a2118"
+demo: lyrcing-sky
 order: 6
 ---
 

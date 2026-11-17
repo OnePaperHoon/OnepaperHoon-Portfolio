@@ -1,6 +1,6 @@
 # 운영 가이드
 
-Astro로 빌드한 완전 정적 사이트입니다. Worker 코드, DB, 버킷 없이 Cloudflare Workers Static Assets로만 배포합니다.
+Astro로 빌드한 완전 정적 사이트입니다. 서버도 DB도 없이 `dist/`를 VPS의 Caddy가 그대로 서빙합니다. (2026-11-03까지는 Cloudflare Workers Static Assets였습니다.)
 
 ## 로컬 개발
 
@@ -13,12 +13,14 @@ pnpm check                   # 타입·콘텐츠 스키마 검사
 
 ## 배포
 
-```sh
-pnpm exec wrangler login   # 최초 1회
-pnpm deploy                # astro build → wrangler deploy
-```
+`main`에 푸시하면 끝입니다. `.github/workflows/deploy.yml`이 빌드하고, `dist/`를 tar로 묶어 SSH로 서버 `/srv/sites/onepaperhoon.com/`에 원자적으로 교체한 뒤 `https://onepaperhoon.com/`이 200인지 확인합니다.
+리포 시크릿 `DEPLOY_HOST` / `DEPLOY_SSH_KEY` / `DEPLOY_KNOWN_HOSTS` 세 개가 필요합니다. 손으로 올릴 때는 `scripts/deploy-vps.sh`.
 
-`wrangler.jsonc`의 routes에 있는 `onepaperhoon.com` / `www.onepaperhoon.com`은 해당 존이 같은 Cloudflare 계정에 있으면 배포 시 자동 연결됩니다.
+서버 쪽 Caddy 설정(`sites.caddy`)은 Knowmesh 컴포즈의 Caddy 컨테이너가 들고 있습니다. 정적 사이트는 `static_site` 스니펫을 import 하는 블록 하나씩입니다.
+
+### 라이브 상태
+
+홈의 "지금 돌아가는 것"에 찍히는 FeedLine·소복 상태는 `src/lib/live.ts`의 `SERVICES`에서 가져옵니다. 빌드 때 한 번 받아 심고, 브라우저에서 같은 주소를 다시 불러 지금 값으로 바꿉니다(`src/scripts/live-status.ts`). 브라우저 갱신은 각 서비스가 `https://onepaperhoon.com`에 CORS를 열어야 동작합니다. 새 서비스는 `SERVICES`에 항목 하나를 더하면 되고, 키는 작업 파일 이름(`src/content/work/<id>.md`)과 같아야 합니다.
 
 Search Console 인증이 필요하면 `.env`의 `VITE_GOOGLE_SITE_VERIFICATION`에 토큰을 넣으세요. 값이 있을 때만 `<meta>`가 들어갑니다.
 
@@ -57,7 +59,7 @@ featured: false # true 면 홈의 대표 작업 자리에 들어갑니다 (cover
 
 ### 만져볼 수 있는 데모
 
-작업 frontmatter에 `demo: cca-init | cda-init | yen-board | roulette`를 주면 상세 페이지에 "직접 해보기" 상자가 들어갑니다.
+작업 frontmatter에 `demo: cca-init | cda-init | yen-board | roulette | sobok-replay | lyrcing-sky`를 주면 상세 페이지에 "직접 해보기" 상자가 들어갑니다.
 데모의 내용과 동작은 `src/scripts/demos.ts`, 상자와 설명 문구는 `src/components/Demo.astro`에 있습니다. 새 데모를 만들면 `src/content.config.ts`의 `demo` enum에도 이름을 추가하세요. 데모는 README에 적힌 동작을 재현한 것이고 실제 도구를 실행하지 않습니다 — 도구의 동작이 바뀌면 여기도 같이 고쳐야 합니다.
 
 ## 노트(Notes) 쓰기

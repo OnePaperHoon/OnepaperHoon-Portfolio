@@ -4,7 +4,7 @@
  * 실제 동작은 src/scripts/demos.ts가 [data-demo-stage] 안에 세웁니다.
  */
 interface Props {
-  name: "cca-init" | "cda-init" | "yen-board" | "roulette";
+  name: "cca-init" | "cda-init" | "yen-board" | "roulette" | "sobok-replay" | "lyrcing-sky";
   live?: string;
 }
 const { name, live } = Astro.props;
@@ -13,8 +13,14 @@ const copy = {
   "cda-init": { title: "설치를 직접 진행해 보세요", text: "이벤트를 고르고, 변경을 미리 보고, 적용합니다. Codex만의 마지막 한 단계(trust)까지." },
   "yen-board": { title: "같은 10분, 다른 채널", text: "왼쪽은 매분 새 알림을 보내는 방식, 오른쪽은 YenWatch처럼 메시지 하나를 계속 고치는 방식입니다. 읽지 않은 알림 숫자를 보세요." },
   roulette: { title: "여기서 바로 돌려보세요", text: "실제 서비스의 목록 일부를 가져온 작은 버전입니다." },
+  "sobok-replay": { title: "2024년 11월 수도권 폭설, 다시 내리는 중", text: "실제 서비스를 그대로 띄웠습니다. 끌어서 돌리고, 아래 시간을 옮기면 관측에서 예보로 넘어갑니다. 지금 눈이 없는 날에도 그날의 눈은 볼 수 있습니다." },
+  "lyrcing-sky": { title: "가사가 별자리가 되는 화면", text: "Lyrcing의 '별자리' 모드를 브라우저에서 흉내 낸 것입니다. 박자에 맞춰 단어가 하나씩 뜨고, 줄이 끝나면 이어진 선이 사라집니다. 실제 앱은 지금 듣는 노래를 따라갑니다." },
 }[name];
-const note = name === "roulette" ? "전체 목록과 필터, PNG 카드 저장은 실제 서비스에 있습니다." : "README에 적힌 동작을 재현한 데모입니다. 실제 도구를 실행하지 않으며, 화면의 문구는 실제와 다를 수 있습니다.";
+const note = {
+  roulette: "전체 목록과 필터, PNG 카드 저장은 실제 서비스에 있습니다.",
+  "sobok-replay": "실제 서비스(sobok.onepaperhoon.com)를 2024-11-27 고정 자료로 연 것입니다. 오늘 눈은 서비스에서 보세요.",
+  "lyrcing-sky": "가사와 박자는 데모용 샘플입니다. 실제 앱은 어떤 플레이어든 지금 재생 중인 곡의 가사를 받아 그립니다.",
+}[name as string] ?? "README에 적힌 동작을 재현한 데모입니다. 실제 도구를 실행하지 않으며, 화면의 문구는 실제와 다를 수 있습니다.";
 ---
 
 <section class="demo" data-demo={name}>

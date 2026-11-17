@@ -12,6 +12,7 @@ links:
   live: https://sobok.onepaperhoon.com
 cover: /covers/sobok.jpg
 tint: "#1d2a3a"
+demo: sobok-replay
 order: 7
 ---
 
