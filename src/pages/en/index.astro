@@ -1,0 +1,86 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import PaperSlot from "@/components/PaperSlot.astro";
+import { site } from "@/site";
+import { worksEn, statusEn } from "@/content/en";
+import { fetchAllLiveStatus } from "@/lib/live";
+
+/** English summary of the site, for visitors arriving from GitHub / npm. Korean pages remain the full version. */
+const works = (await getCollection("work", ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+const live = works.filter((work) => work.data.status === "live");
+const packages = works.filter((work) => work.data.links.npm);
+const stack = [...new Set(works.flatMap((work) => work.data.stack))];
+const status = await fetchAllLiveStatus();
+const en = (id: string) => worksEn[id];
+---
+
+<Base lang="en" title="English" description="Janghoon Han (onepaperhoon). A one-person lab in Seoul building services, automations and developer tools, and running them every day.">
+  <div data-tone-zone="light">
+    <section class="shell page-top">
+      <div class="detail__grid">
+        <div>
+          <p class="eyebrow detail__kind">onepaperhoon · Seoul, KR</p>
+          <h1 class="detail__title">Janghoon Han</h1>
+          <p class="detail__summary">A one-person lab. I plan, build and operate small services, automations and developer tools, and I use every one of them myself. The name comes from my Korean name: 한 장 (han jang) means "one sheet of paper".</p>
+          <div class="detail__actions">
+            <a class="pill" href={`mailto:${site.email}`}>Email</a>
+            <a class="pill pill--ghost" href={site.github} target="_blank" rel="noreferrer">GitHub</a>
+          </div>
+        </div>
+        <PaperSlot class="detail__slot" label="One paper" title="Write it on one page, then build it." body="If the problem and the principle do not fit on one sheet, it is not time to build yet." foot="en" tilt="-5,-16,5" />
+      </div>
+      <dl class="facts">
+        <div><dt>Shipped</dt><dd>{works.length} projects</dd></div>
+        <div><dt>Running now</dt><dd>{live.map((w) => w.data.title).join(" · ")}</dd></div>
+        <div><dt>On npm</dt><dd>{packages.length} packages</dd></div>
+      </dl>
+    </section>
+
+    <section class="shell" id="work" style="padding-bottom:clamp(60px,8vw,100px)">
+      <h2 class="headline" data-rise>Things I built to actually use.</h2>
+      <ul class="en-list">
+        {works.map((work) => (
+          <li class="en-item" data-rise>
+            <div class="en-item__head">
+              <h3><a href={`/work/${work.id}`}>{work.data.title}</a></h3>
+              <span class="en-item__meta">{en(work.id)?.kind ?? work.data.kind} · {work.data.year} · {statusEn[work.data.status]}{status[work.id] && <em class="live-fact" data-live={work.id}>{status[work.id].lineEn}</em>}</span>
+            </div>
+            <p>{en(work.id)?.summary ?? work.data.summary}</p>
+            {en(work.id) && <blockquote class="en-item__paper">{en(work.id).paper}</blockquote>}
+            <p class="en-item__links">
+              {work.data.links.live && <a class="pill" href={work.data.links.live} target="_blank" rel="noreferrer">Open</a>}
+              {work.data.links.npm && <a class="pill" href={work.data.links.npm} target="_blank" rel="noreferrer">npm</a>}
+              {work.data.links.repo && <a class="pill pill--ghost" href={work.data.links.repo} target="_blank" rel="noreferrer">GitHub</a>}
+              <a class="pill pill--plain" href={`/work/${work.id}`}>Case study (Korean)</a>
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="shell--narrow prose" id="about" style="padding-top:0">
+      <h2>How I work</h2>
+      <p><strong>Built because I needed it, used every day.</strong> That is why I spend more time on the install flow, the recovery path when something breaks, and a clean way to turn a tool off than on the first screen.</p>
+      <p><strong>Few notifications, always-current state.</strong> Instead of posting a new alert every minute, edit one message. Instead of a screenshot, show the real number: the live lines on this page are fetched from the running services when you load it.</p>
+      <p><strong>Operations is part of the work.</strong> Everything runs on one VPS behind Docker and Caddy, deploys on push, and gets smoke-tested on the public URL afterwards. The write-ups live in the <a href="/notes">notes</a> (Korean).</p>
+      <h2>Stack</h2>
+      <p>{stack.join(" · ")}</p>
+      <h2>Contact</h2>
+      <p>Write it on one page and send it to <a href={`mailto:${site.email}`}>{site.email}</a>. English is fine.</p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .en-list { display: grid; gap: 0; margin: clamp(30px, 4vw, 48px) 0 0; padding: 0; list-style: none; border-top: 1.5px solid var(--ink); }
+  .en-item { display: grid; gap: 14px; padding: clamp(26px, 3.6vw, 40px) 0; border-bottom: 1px solid var(--line); }
+  .en-item__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+  .en-item h3 { font-size: clamp(1.4rem, 2.4vw, 1.9rem); font-weight: 800; letter-spacing: -0.04em; }
+  .en-item h3 a { text-decoration: none; }
+  .en-item__meta { color: var(--muted); font-size: 0.92rem; font-weight: 600; display: inline-flex; flex-wrap: wrap; gap: 0 14px; }
+  .en-item p { max-width: 48em; font-size: 1.05rem; line-height: 1.7; }
+  .en-item__paper { margin: 0; padding-left: 1em; border-left: 3px solid var(--accent); color: var(--muted); font-weight: 600; font-size: 1rem; }
+  .en-item__links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .en-item__links .pill { text-decoration: none; }
+</style>

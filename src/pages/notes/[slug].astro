@@ -22,7 +22,7 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
       <time datetime={data.date.toISOString()}>{formatDate(data.date)}</time>
       <h1>{data.title}</h1>
       <p class="lede">{data.summary}</p>
-      {data.tags.length > 0 && <ul class="tags">{data.tags.map((tag) => <li>#{tag}</li>)}</ul>}
+      {data.tags.length > 0 && <ul class="tags">{data.tags.map((tag) => <li><a href={`/notes/tag/${tag}`}>#{tag}</a></li>)}</ul>}
     </header>
     <article class="shell--narrow prose"><Content /></article>
     <p class="shell--narrow" style="padding-bottom:clamp(70px,9vw,120px)"><a class="pill pill--plain" href="/notes">← 전체 기록</a></p>

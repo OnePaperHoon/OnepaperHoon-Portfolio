@@ -8,13 +8,15 @@
  */
 import { fetchLiveStatusInBrowser, type LiveStatus } from "@/lib/live";
 
+const isEn = () => document.documentElement.lang === "en";
 function ago(iso: string) {
   const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-  if (Number.isNaN(minutes)) return "방금 점검";
-  if (minutes < 1) return "방금 점검";
-  if (minutes < 60) return `${minutes}분 전 점검`;
-  return `${Math.round(minutes / 60)}시간 전 점검`;
+  const en = isEn();
+  if (Number.isNaN(minutes) || minutes < 1) return en ? "checked just now" : "방금 점검";
+  if (minutes < 60) return en ? `checked ${minutes} min ago` : `${minutes}분 전 점검`;
+  return en ? `checked ${Math.round(minutes / 60)} h ago` : `${Math.round(minutes / 60)}시간 전 점검`;
 }
+const text = (status: LiveStatus) => (isEn() ? status.lineEn : status.line);
 
 const cache = new Map<string, Promise<LiveStatus | null>>();
 const load = (id: string) => {
@@ -44,7 +46,7 @@ export async function mountLiveStatus() {
       }
       const got = (target.dataset.live ?? "").split(",").map((s) => s.trim()).filter((id) => fresh[id]);
       if (!got.length) continue;
-      for (const id of got) lines[id] = fresh[id].line;
+      for (const id of got) lines[id] = text(fresh[id]);
       const latest = got.map((id) => fresh[id].checkedAt).sort().at(-1)!;
       // 종이에 인쇄되는 문구와, 종이가 없을 때 보이는 CSS 카드 양쪽을 고칩니다.
       target.dataset.liveLines = JSON.stringify(lines);
@@ -58,7 +60,7 @@ export async function mountLiveStatus() {
     } else {
       const status = fresh[target.dataset.live ?? ""];
       if (!status) continue;
-      target.textContent = `${status.line} · ${ago(status.checkedAt)}`;
+      target.textContent = `${text(status)} · ${ago(status.checkedAt)}`;
       target.classList.add("is-live");
     }
   }

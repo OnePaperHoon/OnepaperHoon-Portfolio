@@ -4,6 +4,7 @@ import Base from "@/layouts/Base.astro";
 import PaperSlot from "@/components/PaperSlot.astro";
 import Demo from "@/components/Demo.astro";
 import { statusLabel } from "@/site";
+import { fetchLiveStatus } from "@/lib/live";
 
 export async function getStaticPaths() {
   const works = (await getCollection("work", ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
@@ -28,6 +29,9 @@ interface Props {
 const { entry, previous, next, foot } = Astro.props;
 const { data } = entry;
 const { Content } = await render(entry);
+// 운영 중인 서비스면 실제 상태 한 칸 (빌드 값 → 브라우저에서 갱신, src/scripts/live-status.ts)
+const status = data.status === "live" ? await fetchLiveStatus(entry.id) : null;
+const builtAt = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
 ---
 
 <Base title={data.title} description={data.summary} image={`/og/work/${entry.id}.png`} type="article">
@@ -47,9 +51,10 @@ const { Content } = await render(entry);
         <PaperSlot class="detail__slot" label={data.title} title={data.paper} body={data.kind} foot={foot} tilt="-5,-16,5" />
       </div>
 
-      <dl class="facts">
+      <dl class:list={["facts", { "facts--4": !!status }]}>
         <div><dt>역할</dt><dd>{data.role}</dd></div>
         <div><dt>상태</dt><dd>{statusLabel[data.status]} · {data.timeline}</dd></div>
+        {status && <div><dt>지금</dt><dd><em class="live-fact" data-live={entry.id}>{status.line} · {builtAt} 기준</em></dd></div>}
         <div><dt>스택</dt><dd>{data.stack.length ? data.stack.join(" · ") : "—"}</dd></div>
       </dl>
 

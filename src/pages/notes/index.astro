@@ -5,6 +5,7 @@ import PaperSlot from "@/components/PaperSlot.astro";
 
 const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-", ".");
+const tags = [...notes.flatMap((note) => note.data.tags).reduce((map, tag) => map.set(tag, (map.get(tag) ?? 0) + 1), new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 ---
 
 <Base title="Notes" description="만들면서 배운 것을 한 장씩 남기는 기록.">
@@ -20,6 +21,7 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
       </div>
     </section>
     <section class="shell" style="padding-bottom:clamp(80px,10vw,140px)">
+      {tags.length > 0 && <ul class="tags tags--index" aria-label="태그">{tags.map(([tag, count]) => <li><a href={`/notes/tag/${tag}`}>#{tag} <small>{count}</small></a></li>)}</ul>}
       <ul class="note-list">
         {notes.map((note) => (
           <li>

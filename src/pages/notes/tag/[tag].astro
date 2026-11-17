@@ -1,0 +1,44 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import PaperSlot from "@/components/PaperSlot.astro";
+
+/** /notes/tag/<tag>: 그 태그가 붙은 노트만. 태그는 frontmatter `tags:` 에서 자동으로 모읍니다. */
+export async function getStaticPaths() {
+  const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  const tags = [...new Set(notes.flatMap((note) => note.data.tags))];
+  return tags.map((tag) => ({ params: { tag }, props: { tag, notes: notes.filter((note) => note.data.tags.includes(tag)), all: tags } }));
+}
+const { tag, notes, all } = Astro.props;
+const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-", ".");
+---
+
+<Base title={`#${tag} — Notes`} description={`${tag} 태그가 붙은 기록 ${notes.length}편.`}>
+  <div data-tone-zone="light">
+    <section class="shell page-top">
+      <div class="detail__grid">
+        <div>
+          <p class="eyebrow detail__kind"><a href="/notes">Notes</a> · 태그</p>
+          <h1 class="detail__title">#{tag}</h1>
+          <p class="detail__summary">{tag} 태그가 붙은 기록 {notes.length}편.</p>
+        </div>
+        <PaperSlot class="detail__slot" label="Notes" title={`#${tag}`} body={`${notes.length}편`} foot="tag" tilt="5,14,-4" />
+      </div>
+    </section>
+    <section class="shell" style="padding-bottom:clamp(80px,10vw,140px)">
+      <ul class="tags tags--index" aria-label="다른 태그">{all.map((t) => <li class:list={{ "is-on": t === tag }}><a href={`/notes/tag/${t}`}>#{t}</a></li>)}</ul>
+      <ul class="note-list">
+        {notes.map((note) => (
+          <li>
+            <a class="note-row" href={`/notes/${note.id}`}>
+              <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+              <h3>{note.data.title}</h3>
+              <p>{note.data.summary}</p>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</Base>

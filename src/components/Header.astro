@@ -1,16 +1,29 @@
 ---
+interface Props {
+  lang?: "ko" | "en";
+}
+const { lang = "ko" } = Astro.props;
 const path = Astro.url.pathname;
-const links = [
-  { href: "/#work", label: "Work", current: path.startsWith("/work") },
-  { href: "/notes", label: "Notes", current: path.startsWith("/notes") },
-  { href: "/about", label: "About", current: path.startsWith("/about") },
-  { href: "#contact", label: "Contact", current: false },
-];
+const links =
+  lang === "en"
+    ? [
+        { href: "/en#work", label: "Work", current: false },
+        { href: "/en#about", label: "About", current: false },
+        { href: "#contact", label: "Contact", current: false },
+        { href: "/", label: "한국어", current: false },
+      ]
+    : [
+        { href: "/#work", label: "Work", current: path.startsWith("/work") },
+        { href: "/notes", label: "Notes", current: path.startsWith("/notes") },
+        { href: "/about", label: "About", current: path.startsWith("/about") },
+        { href: "#contact", label: "Contact", current: false },
+        { href: "/en", label: "EN", current: false },
+      ];
 ---
 
 <header class="site-header" data-tone="light">
   <div class="shell site-header__inner">
-    <a class="brand" href="/" aria-label="onepaperhoon 홈">
+    <a class="brand" href={lang === "en" ? "/en" : "/"} aria-label="onepaperhoon 홈">
       <span class="brand__sheet" aria-hidden="true"></span>
       <span>onepaperhoon</span>
     </a>

@@ -18,6 +18,12 @@ pnpm check                   # 타입·콘텐츠 스키마 검사
 
 서버 쪽 Caddy 설정(`sites.caddy`)은 Knowmesh 컴포즈의 Caddy 컨테이너가 들고 있습니다. 정적 사이트는 `static_site` 스니펫을 import 하는 블록 하나씩입니다.
 
+### 영어판, 태그, 통계
+
+- `/en` 은 작업 7개의 영어 요약 한 페이지입니다 (`src/content/en.ts`). 한국어가 원본이고, 새 작업을 추가하면 여기에도 항목을 더하세요. 홈과 `/en` 은 서로 hreflang 으로 연결됩니다.
+- `/notes/tag/<tag>` 는 노트 frontmatter `tags:` 에서 자동 생성됩니다.
+- 방문 통계: 서버 Caddy 가 사이트별 접근 로그를 남기고(`/var/log/caddy/<domain>.log`, 30일), 매시간 cron 이 goaccess 로 `https://onepaperhoon.com/_stats/` 에 HTML 리포트를 만듭니다 (basic auth, IP 익명화, 봇·정적 자산 제외). 스크립트는 서버 `/opt/stats/make-stats.sh`.
+
 ### 라이브 상태
 
 홈의 "지금 돌아가는 것"에 찍히는 FeedLine·소복 상태는 `src/lib/live.ts`의 `SERVICES`에서 가져옵니다. 빌드 때 한 번 받아 심고, 브라우저에서 같은 주소를 다시 불러 지금 값으로 바꿉니다(`src/scripts/live-status.ts`). 브라우저 갱신은 각 서비스가 `https://onepaperhoon.com`에 CORS를 열어야 동작합니다. 새 서비스는 `SERVICES`에 항목 하나를 더하면 되고, 키는 작업 파일 이름(`src/content/work/<id>.md`)과 같아야 합니다.

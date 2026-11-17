@@ -307,6 +307,9 @@ main { position: relative; }
 .facts div { padding: 20px 20px 4px 0; }
 .facts dt { color: var(--muted); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
 .facts dd { margin: 8px 0 0; font-size: 1.02rem; font-weight: 600; }
+.facts--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.live-fact { position: relative; padding-left: 16px; color: #1f9d5c; font-style: normal; font-family: var(--mono); font-size: 0.92rem; letter-spacing: -0.02em; }
+.live-fact::before { content: ""; position: absolute; left: 0; top: 0.42em; width: 8px; height: 8px; border-radius: 50%; background: #2fcf7a; box-shadow: 0 0 0 4px rgba(47, 207, 122, 0.18); }
 .detail__cover { margin-top: clamp(40px, 6vw, 70px); }
 .typed-cursor { display: inline-block; width: 0.58em; height: 1.05em; margin-left: 1px; vertical-align: -0.16em; background: currentColor; animation: blink 1.05s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
@@ -347,6 +350,10 @@ main { position: relative; }
 .note-head p { margin-top: 20px; }
 .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; padding: 0; list-style: none; }
 .tags li { padding: 0.3em 0.85em; border-radius: 999px; background: rgba(27, 26, 46, 0.07); font-size: 0.86rem; font-weight: 600; }
+.tags li a { text-decoration: none; }
+.tags li.is-on { background: var(--ink); color: #fff; }
+.tags li.is-on a { color: #fff; }
+.tags--index { margin-top: 0; margin-bottom: 10px; }
 
 .lost { min-height: 100svh; display: grid; align-content: center; padding-block: 120px 60px; }
 .lost .paper-slot__hint { color: var(--muted); }
@@ -478,7 +485,7 @@ main { position: relative; }
   .work__layout { grid-template-columns: minmax(0, 1fr); }
   .work__grid { grid-column: 1; }
   .work__side { display: none; }
-  .facts { grid-template-columns: minmax(0, 1fr); }
+  .facts, .facts--4 { grid-template-columns: minmax(0, 1fr); }
   .note-row { grid-template-columns: minmax(0, 1fr) auto; }
   .note-row time { grid-column: 1 / -1; }
   .note-row p { grid-column: 1; }

@@ -8,6 +8,8 @@
 export type LiveStatus = {
   /** 종이와 목록에 찍히는 한 줄. 예: "소스 25/25 정상" */
   line: string;
+  /** /en 용 같은 내용 */
+  lineEn: string;
   /** 마지막으로 점검·갱신된 시각 (ISO) */
   checkedAt: string;
 };
@@ -29,7 +31,7 @@ export const SERVICES: Record<string, Service> = {
     parse(data) {
       const d = data as { sourceCount?: unknown; totalSourceCount?: unknown; healthCheckedAt?: unknown; generatedAt?: unknown } | null;
       if (!d || typeof d.sourceCount !== "number" || typeof d.totalSourceCount !== "number") return null;
-      return { line: `소스 ${d.sourceCount}/${d.totalSourceCount} 정상`, checkedAt: iso(d.healthCheckedAt, false) || iso(d.generatedAt) };
+      return { line: `소스 ${d.sourceCount}/${d.totalSourceCount} 정상`, lineEn: `${d.sourceCount}/${d.totalSourceCount} sources healthy`, checkedAt: iso(d.healthCheckedAt, false) || iso(d.generatedAt) };
     },
   },
   sobok: {
@@ -39,11 +41,14 @@ export const SERVICES: Record<string, Service> = {
       const d = data as { ok?: unknown; lag?: { obs_h?: unknown; fcst_h?: unknown; stale?: unknown }; last_ok?: { obs?: unknown; fcst?: unknown } } | null;
       if (!d || d.ok !== true || typeof d.lag?.obs_h !== "number") return null;
       const hours = (h: number) => (h < 1 ? `${Math.max(1, Math.round(h * 60))}분 전` : `${Math.round(h * 10) / 10}시간 전`);
+      const hoursEn = (h: number) => (h < 1 ? `${Math.max(1, Math.round(h * 60))} min ago` : `${Math.round(h * 10) / 10} h ago`);
       const fcst = typeof d.lag.fcst_h === "number" ? ` · 예보 ${hours(d.lag.fcst_h)}` : "";
+      const fcstEn = typeof d.lag.fcst_h === "number" ? ` · forecast ${hoursEn(d.lag.fcst_h)}` : "";
       const line = d.lag.stale ? `수집 지연 (관측 ${hours(d.lag.obs_h)})` : `관측 ${hours(d.lag.obs_h)}${fcst} 갱신`;
+      const lineEn = d.lag.stale ? `collection delayed (obs ${hoursEn(d.lag.obs_h)})` : `obs ${hoursEn(d.lag.obs_h)}${fcstEn}`;
       // 소복 서버는 KST 벽시계를 시간대 없이 돌려줍니다.
       const last = typeof d.last_ok?.obs === "string" ? `${d.last_ok.obs}+09:00` : "";
-      return { line, checkedAt: last || new Date().toISOString() };
+      return { line, lineEn, checkedAt: last || new Date().toISOString() };
     },
   },
 };

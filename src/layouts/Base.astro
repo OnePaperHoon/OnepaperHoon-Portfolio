@@ -13,10 +13,16 @@ interface Props {
   /** 첫 화면에서 종이비행기가 날아 들어와 펼쳐지는 인트로 */
   flyIn?: boolean;
   type?: "website" | "article";
+  /** 페이지 언어. /en 아래는 "en" — 헤더·푸터 문구가 영어로 바뀝니다. */
+  lang?: "ko" | "en";
 }
-const { title, description = site.description, image = "/og.jpg", flyIn = false, type = "website" } = Astro.props;
+const { title, description = site.description, image = "/og.jpg", flyIn = false, type = "website", lang = "ko" } = Astro.props;
+// 홈과 영어판은 서로의 번역본. 나머지 페이지는 한국어만 있습니다.
+// build.format "file" 이라 빌드 중 pathname 이 "/work/x.html" 로 옵니다. 사이트맵·실제 주소와 같은 꼴(/work/x)로 맞춥니다.
+const path = Astro.url.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "");
+const alternates = path === "/" || path === "/en" ? [{ lang: "ko", href: `${site.url}/` }, { lang: "en", href: `${site.url}/en` }] : [];
 const pageTitle = title ? `${title} — ${site.name}` : site.title;
-const canonical = new URL(Astro.url.pathname, site.url).href;
+const canonical = new URL(path, site.url).href;
 const ogImage = new URL(image, site.url).href;
 const verification = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION;
 // 터미널 모드가 읽는 작은 색인
@@ -40,7 +46,7 @@ const person = {
 ---
 
 <!doctype html>
-<html lang="ko" data-paper-intro={flyIn ? "fly-in" : undefined}>
+<html lang={lang} data-paper-intro={flyIn ? "fly-in" : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -52,7 +58,9 @@ const person = {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate" type="application/rss+xml" title={`${site.name} notes`} href="/rss.xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    {verification && !verification.startsWith("REPLACE") && <meta name="google-site-verification" content={verification} />}
+    {alternates.map((alt) => <link rel="alternate" hreflang={alt.lang} href={alt.href} />)}
+    {alternates.length > 0 && <link rel="alternate" hreflang="x-default" href={`${site.url}/`} />}
+    {verification && !/replace/i.test(verification) && <meta name="google-site-verification" content={verification} />}
     <meta property="og:type" content={type} />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={pageTitle} />
@@ -85,11 +93,11 @@ const person = {
     </script>
   </head>
   <body>
-    <Header />
+    <Header lang={lang} />
     <main>
       <slot />
     </main>
-    <Footer />
+    <Footer lang={lang} />
     <script type="application/json" id="site-index" is:inline set:html={JSON.stringify(siteIndex)} />
     <div id="term-root" transition:persist="term-root"></div>
     <!-- 종이 무대: 페이지를 이동해도 같은 캔버스가 유지됩니다 -->
