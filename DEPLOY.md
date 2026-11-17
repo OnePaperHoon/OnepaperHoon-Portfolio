@@ -22,7 +22,7 @@ pnpm check                   # 타입·콘텐츠 스키마 검사
 
 - `/en` 은 작업 7개의 영어 요약 한 페이지입니다 (`src/content/en.ts`). 한국어가 원본이고, 새 작업을 추가하면 여기에도 항목을 더하세요. 홈과 `/en` 은 서로 hreflang 으로 연결됩니다.
 - `/notes/tag/<tag>` 는 노트 frontmatter `tags:` 에서 자동 생성됩니다.
-- 방문 통계: 서버 Caddy 가 사이트별 접근 로그를 남기고(`/var/log/caddy/<domain>.log`, 30일), 매시간 cron 이 goaccess 로 `https://onepaperhoon.com/_stats/` 에 HTML 리포트를 만듭니다 (basic auth, IP 익명화, 봇·정적 자산 제외). 스크립트는 서버 `/opt/stats/make-stats.sh`.
+- 방문 통계: 서버 Caddy 가 사이트별 접근 로그를 남기고(`/var/log/caddy/<domain>.log`, 30일), 매시간 cron 이 goaccess 로 `https://onepaperhoon.com/_stats/` 에 HTML 리포트를 만듭니다 (basic auth, IP 익명화, 봇·정적 자산 제외). 스크립트는 서버 `/opt/stats/{make-stats.sh,render.py}` 이고 사본이 이 리포 `scripts/stats/` 에 있습니다 (고치면 scp 로 올리세요).
 
 ### 라이브 상태
 

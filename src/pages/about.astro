@@ -10,6 +10,19 @@ const live = works.filter((work) => work.data.status === "live");
 const stack = [...new Set(works.flatMap((work) => work.data.stack))];
 const years = [...new Set(works.map((work) => work.data.year))].sort();
 const since = years[0];
+/** 경력. GitHub 프로필 README(career.svg)와 같은 내용 — 바뀌면 둘 다 고칩니다. */
+const career = [
+  { when: "2026.05 – 현재", where: "Shopinx", what: "서비스 개발" },
+  { when: "2025.06 – 2025.12", where: "Newtonz", what: "개발 총괄" },
+  { when: "2025.03 – 현재", where: "42Seoul", what: "member" },
+  { when: "2023.09 – 2025.03", where: "42Seoul", what: "learner (École 42)" },
+];
+const stacks = [
+  { name: "언어", items: ["TypeScript", "C", "C++", "Rust"] },
+  { name: "런타임", items: ["Node.js", "React", "Vite", "tRPC", "React Native"] },
+  { name: "데이터", items: ["SQLite", "Drizzle", "Postgres", "MongoDB"] },
+  { name: "인프라", items: ["Docker", "Caddy", "Nginx", "Linux", "GitHub Actions"] },
+];
 const areas = [
   { title: "서비스", text: "사람이 매일 들어와 보는 웹 서비스. 데이터 수집부터 화면, 운영까지.", examples: works.filter((w) => ["feedline", "sobok", "roulette-side"].includes(w.id)) },
   { title: "자동화", text: "기다림을 대신 서 주는 것. 24시간 돌면서 필요한 순간에만 말을 겁니다.", examples: works.filter((w) => ["yenwatch"].includes(w.id)) },
@@ -24,10 +37,11 @@ const areas = [
         <div>
           <p class="eyebrow detail__kind">About · Seoul, KR</p>
           <h1 class="detail__title">한장훈</h1>
-          <p class="detail__summary">기획, 개발, 운영을 혼자서 끝까지 가져가는 1인 개발자입니다. 흩어진 정보와 끝없는 기다림을, 믿을 수 있는 상태와 조용한 신호로 바꾸는 것을 만듭니다.</p>
+          <p class="detail__summary">서울에서 서비스 만드는 개발자예요. 여기저기 흩어져 있는 정보를 한곳에 모아 쓸 만하게 만드는 일을 좋아합니다. 기획, 개발, 운영을 혼자서 끝까지 가져갑니다.</p>
           <div class="detail__actions">
             <a class="pill" href={`mailto:${site.email}`}>메일 보내기</a>
             <a class="pill pill--ghost" href={site.github} target="_blank" rel="noreferrer">GitHub</a>
+            <a class="pill pill--ghost" href="https://solved.ac/wkdgns720" target="_blank" rel="noreferrer">solved.ac</a>
           </div>
         </div>
         <PaperSlot class="detail__slot" label="About" title="한 장에 적고, 만든다." body="문제와 원칙이 종이 한 장에 정리되지 않으면 아직 만들 때가 아닙니다." foot="about" tilt="-5,-16,5" />
@@ -41,6 +55,12 @@ const areas = [
     </section>
 
     <article class="shell--narrow prose about">
+      <h2>경력</h2>
+      <ul class="about__career">
+        {career.map((c) => <li><time>{c.when}</time><strong>{c.where}</strong><span>{c.what}</span></li>)}
+      </ul>
+      <p>지금은 Shopinx에서 서비스를 만들고 있고, 여기 있는 것들은 그 바깥에서 혼자 만들고 운영하는 것들입니다.</p>
+
       <h2>어떻게 일하는지</h2>
       <p><strong>필요해서 만들고, 만든 것은 직접 씁니다.</strong> 여기 있는 것들은 전부 제가 매일 쓰는 것입니다. 그래서 첫 화면보다 설치 과정, 장애가 났을 때 복구하는 길, 그만 쓰고 싶을 때 깨끗하게 끄는 방법에 시간을 더 씁니다.</p>
       <p><strong>시작은 종이 한 장.</strong> 무엇이 문제인지, 지키고 싶은 원칙이 무엇인지 한 장에 적힐 때까지는 코드를 열지 않습니다. 각 작업 페이지의 종이에 적힌 한 줄이 그 원칙입니다.</p>
@@ -59,8 +79,10 @@ const areas = [
       </ul>
 
       <h2>다루는 것</h2>
-      <p>{stack.join(" · ")}</p>
-      <p>프론트는 TypeScript와 three.js, 백엔드는 Node.js와 Python, 저장은 SQLite와 Postgres, 배포는 Docker와 Caddy 위에서 GitHub Actions로 합니다. 데스크톱은 Tauri, 상시 모니터링은 라즈베리파이로.</p>
+      <dl class="about__stack">
+        {stacks.map((s) => <div><dt>{s.name}</dt><dd>{s.items.join(" · ")}</dd></div>)}
+      </dl>
+      <p>이 사이트의 작업들에서 실제로 쓴 것: {stack.join(" · ")}.</p>
 
       <h2>지금 돌아가는 것</h2>
       <table>
@@ -93,4 +115,14 @@ const areas = [
   .about__areas strong { display: block; font-size: 1.2rem; letter-spacing: -0.03em; }
   .about__areas p { margin-top: 6px; }
   .about__examples { color: var(--muted); font-size: 0.95rem; }
+  .about__career { padding: 0; list-style: none; display: grid; gap: 10px; border-top: 1.5px solid var(--ink); }
+  .about__career li { display: grid; grid-template-columns: 11em minmax(0, 1fr); gap: 4px 18px; padding: 12px 0; border-bottom: 1px solid var(--line); margin: 0; }
+  .about__career li + li { margin-top: 0; }
+  .about__career time { color: var(--muted); font-family: var(--mono); font-size: 0.86rem; }
+  .about__career strong { font-size: 1.05rem; }
+  .about__career span { grid-column: 2; color: var(--muted); font-size: 0.95rem; }
+  .about__stack { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; margin: 0; }
+  .about__stack dt { color: var(--muted); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+  .about__stack dd { margin: 4px 0 0; font-weight: 600; }
+  @media (max-width: 560px) { .about__career li { grid-template-columns: minmax(0, 1fr); } .about__career span { grid-column: 1; } .about__stack { grid-template-columns: minmax(0, 1fr); } }
 </style>
