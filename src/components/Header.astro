@@ -9,14 +9,14 @@ const links =
     ? [
         { href: "/en#work", label: "Work", current: false },
         { href: "/en#about", label: "About", current: false },
-        { href: "#contact", label: "Contact", current: false },
+        { href: "#contact", label: "Contact", current: false, secondary: true },
         { href: "/", label: "한국어", current: false },
       ]
     : [
         { href: "/#work", label: "Work", current: path.startsWith("/work") },
         { href: "/notes", label: "Notes", current: path.startsWith("/notes") },
         { href: "/about", label: "About", current: path.startsWith("/about") },
-        { href: "#contact", label: "Contact", current: false },
+        { href: "#contact", label: "Contact", current: false, secondary: true },
         { href: "/en", label: "EN", current: false },
       ];
 ---
@@ -28,7 +28,7 @@ const links =
       <span>onepaperhoon</span>
     </a>
     <nav class="site-nav" aria-label="주요 메뉴">
-      {links.map((link) => <a href={link.href} aria-current={link.current ? "page" : undefined}>{link.label}</a>)}
+      {links.map((link) => <a href={link.href} class:list={{ "site-nav__secondary": link.secondary }} aria-current={link.current ? "page" : undefined}>{link.label}</a>)}
       <span class="site-tools">
         <button class="tool" type="button" data-pen-toggle aria-pressed="false" aria-label="종이에 낙서하기" title="종이에 낙서하기">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.5L16.5 4a2.1 2.1 0 0 1 3 3L8 18.5z" /><path d="M14.5 6l3 3" /></svg>

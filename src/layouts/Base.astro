@@ -135,7 +135,10 @@ const person = {
         // 종이 무대와 셰이더 하늘: 동작 줄이기를 켠 환경에서는 CSS 종이 카드와 그라데이션으로 둡니다.
         if (!reduced.matches) {
           mountSky();
-          import("@/scripts/paper/stage").then(({ mountPaper }) => mountPaper()).catch(() => undefined);
+          // three.js 번들(약 550KB)은 첫 그리기와 글꼴·상태 갱신이 끝난 뒤 유휴 시간에 싣는다. 그동안은 CSS 종이 카드가 보인다.
+          const loadPaper = () => import("@/scripts/paper/stage").then(({ mountPaper }) => mountPaper()).catch(() => undefined);
+          if ("requestIdleCallback" in window) (window as Window).requestIdleCallback(() => void loadPaper(), { timeout: 2000 });
+          else setTimeout(() => void loadPaper(), 250);
         }
       });
     </script>

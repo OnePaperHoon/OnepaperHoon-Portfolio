@@ -80,13 +80,13 @@ h1, h2, h3, p { margin: 0; }
 .site-header__inner::before { content: ""; position: absolute; inset: 14px -22px; z-index: -1; border-radius: 999px; background: rgba(248, 244, 236, 0.86); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); box-shadow: 0 10px 30px -18px rgba(27, 26, 46, 0.5); opacity: 0; transition: opacity 320ms var(--ease), background-color 320ms var(--ease); }
 .site-header.is-scrolled .site-header__inner::before { opacity: 1; }
 .site-header[data-tone="dark"] .site-header__inner::before { background: rgba(30, 24, 84, 0.74); }
-.brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 0.95rem; font-weight: 800; letter-spacing: -0.04em; text-decoration: none; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 0.95rem; font-weight: 800; letter-spacing: -0.04em; text-decoration: none; white-space: nowrap; }
 .brand__sheet { width: 17px; height: 23px; border-radius: 2px; background: currentColor; clip-path: polygon(0 0, 62% 0, 100% 28%, 100% 100%, 0 100%); }
 .site-nav { display: flex; align-items: center; gap: clamp(18px, 3vw, 36px); }
 .site-tools { display: flex; gap: 4px; margin-left: clamp(-8px, -1vw, -14px); }
 .tool { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: inherit; font: 700 0.74rem var(--mono); letter-spacing: -0.06em; cursor: pointer; opacity: 0.72; transition: opacity 200ms var(--ease), background-color 200ms var(--ease); }
 .tool:hover, .tool:focus-visible, .tool[aria-pressed="true"] { opacity: 1; background: color-mix(in srgb, currentColor 14%, transparent); }
-.site-nav a { font-size: 1rem; font-weight: 600; text-decoration: none; opacity: 0.92; }
+.site-nav a { font-size: 1rem; font-weight: 600; text-decoration: none; opacity: 0.92; white-space: nowrap; }
 .site-nav a:hover, .site-nav a[aria-current="page"] { opacity: 1; text-decoration: underline; text-underline-offset: 6px; }
 
 /* ---------- 종이 슬롯 ---------- */
@@ -501,6 +501,13 @@ main { position: relative; }
   .prose .shots { grid-template-columns: minmax(0, 1fr); }
   .chat { min-height: 300px; }
   .site-nav { gap: 12px; }
+  .site-nav__secondary { display: none; } /* Contact 는 푸터 앵커라 좁은 화면에서는 숨긴다 */
   .site-tools { display: none; }
   .site-nav a { font-size: 0.94rem; }
+}
+@media (max-width: 400px) {
+  .brand { font-size: 0.84rem; gap: 7px; }
+  .brand__sheet { width: 14px; height: 19px; }
+  .site-nav { gap: 9px; }
+  .site-nav a { font-size: 0.86rem; }
 }
