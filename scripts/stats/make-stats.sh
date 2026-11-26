@@ -11,8 +11,10 @@ export LANG=ko_KR.UTF-8 LC_ALL=ko_KR.UTF-8
 COMMON=(--log-format=CADDY --date-format=CADDY --time-format=CADDY --anonymize-ip --no-query-string --real-os --double-decode
   --ignore-status=301 --ignore-status=304 --ignore-status=401 --ignore-status=404
   --static-file=.js --static-file=.css --static-file=.png --static-file=.jpg --static-file=.svg --static-file=.woff2 --static-file=.otf --static-file=.glb --static-file=.ico --static-file=.xml --static-file=.webmanifest --static-file=.map --static-file=.json --static-file=.txt)
-# 봇·헬스체크·curl·이 통계 페이지 자체는 뺀다
-filter() { grep -v -E '"uri":"/_stats' | grep -v -E '"user_agent":\["[^"]*(bot|Bot|crawl|spider|curl|Go-http|python-requests|HeadlessChrome|Lighthouse)[^"]*"\]' || true; }
+# 봇·헬스체크·curl·이 통계 페이지 자체는 뺀다.
+# 취약점 스캐너 경로(/wp-*, .php, .env, 점으로 시작하는 경로…)는 Caddy 가 404 로 끊지만, 그 이전 로그도 집계에서 뺀다.
+PROBE='"uri":"(/[^"]*/)?\.[^"/]+|"uri":"[^"]*\.(php|asp|aspx|jsp|cgi|sql|bak|old|env|ini|log)(\?|")|"uri":"/(wp-|wordpress|cgi-bin|vendor/|phpmyadmin|xmlrpc|admin/|administrator|owa/|autodiscover|actuator|console|telescope|solr|_ignition|boaform|HNAP1|GponForm)'
+filter() { grep -v -E '"uri":"/_stats' | grep -v -E "$PROBE" | grep -v -E '"user_agent":\["[^"]*(bot|Bot|crawl|spider|curl|Go-http|python-requests|HeadlessChrome|Lighthouse|zgrab|masscan|nmap|Nuclei|censys|Expanse|Palo Alto)[^"]*"\]' || true; }
 args=()
 for d in "${DOMAINS[@]}"; do
   if ls "$LOGS/$d.log"* >/dev/null 2>&1 && [ -s "$LOGS/$d.log" ]; then
