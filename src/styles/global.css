@@ -338,6 +338,13 @@ main { position: relative; }
 .prose .pill { text-decoration: none; }
 .prose hr { margin: 2.6em 0; border: 0; border-top: 1px solid var(--line); }
 
+.related { padding-bottom: clamp(40px, 6vw, 70px); }
+.related__eyebrow { color: var(--accent); }
+.related__eyebrow + .note-list { margin-top: 6px; }
+.related .note-list + .related__eyebrow, .related__works + .related__eyebrow { margin-top: 40px; }
+.related__works { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.related__works .pill { text-decoration: none; }
+.related .note-row { padding-block: 20px; }
 .pager { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding-bottom: clamp(70px, 9vw, 120px); }
 .pager a { display: block; padding: 26px 28px; border-radius: var(--radius); background: var(--ink); color: #fff; text-decoration: none; transition: transform 320ms var(--ease); }
 .pager a:hover { transform: translateY(-4px); }

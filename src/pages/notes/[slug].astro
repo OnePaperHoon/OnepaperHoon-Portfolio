@@ -3,14 +3,31 @@ import { getCollection, render, type CollectionEntry } from "astro:content";
 import Base from "@/layouts/Base.astro";
 
 export async function getStaticPaths() {
-  const notes = await getCollection("notes", ({ data }) => !data.draft);
-  return notes.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+  const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  const works = (await getCollection("work", ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+  return notes.map((entry, index) => {
+    // 같은 태그를 가진 다른 기록 (겹치는 태그가 많은 순)
+    const siblings = notes
+      .filter((note) => note.id !== entry.id)
+      .map((note) => ({ note, score: note.data.tags.filter((tag) => entry.data.tags.includes(tag)).length }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(({ note }) => note);
+    // 이 기록이 다룬 작업 (태그 = 작업 id 또는 그 앞부분)
+    const relatedWorks = works.filter((work) => entry.data.tags.some((tag) => tag === work.id || work.id.startsWith(`${tag}-`)));
+    return { params: { slug: entry.id }, props: { entry, newer: notes[index - 1] ?? null, older: notes[index + 1] ?? null, siblings, relatedWorks } };
+  });
 }
 
 interface Props {
   entry: CollectionEntry<"notes">;
+  newer: CollectionEntry<"notes"> | null;
+  older: CollectionEntry<"notes"> | null;
+  siblings: CollectionEntry<"notes">[];
+  relatedWorks: CollectionEntry<"work">[];
 }
-const { entry } = Astro.props;
+const { entry, newer, older, siblings, relatedWorks } = Astro.props;
 const { data } = entry;
 const { Content } = await render(entry);
 const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-", ".");
@@ -25,6 +42,36 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-
       {data.tags.length > 0 && <ul class="tags">{data.tags.map((tag) => <li><a href={`/notes/tag/${tag}`}>#{tag}</a></li>)}</ul>}
     </header>
     <article class="shell--narrow prose"><Content /></article>
-    <p class="shell--narrow" style="padding-bottom:clamp(70px,9vw,120px)"><a class="pill pill--plain" href="/notes">← 전체 기록</a></p>
+    {(relatedWorks.length > 0 || siblings.length > 0) && (
+      <section class="shell--narrow related" aria-label="이어서 보기">
+        {relatedWorks.length > 0 && (
+          <>
+            <p class="eyebrow related__eyebrow">이 기록이 다룬 작업</p>
+            <p class="related__works">{relatedWorks.map((work) => <a class="pill pill--ghost" href={`/work/${work.id}`}>{work.data.title}</a>)}</p>
+          </>
+        )}
+        {siblings.length > 0 && (
+          <>
+            <p class="eyebrow related__eyebrow">같은 태그의 기록</p>
+            <ul class="note-list">
+              {siblings.map((note) => (
+                <li>
+                  <a class="note-row" href={`/notes/${note.id}`}>
+                    <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+                    <h3>{note.data.title}</h3>
+                    <p>{note.data.summary}</p>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+    )}
+    <nav class="shell pager" aria-label="다른 기록">
+      {older ? <a href={`/notes/${older.id}`}><span>← 이전 기록</span><strong>{older.data.title}</strong></a> : <a href="/notes"><span>← 전체 기록</span><strong>짧은 기록</strong></a>}
+      {newer ? <a href={`/notes/${newer.id}`}><span>다음 기록 →</span><strong>{newer.data.title}</strong></a> : <a href="/notes"><span>전체 기록 →</span><strong>짧은 기록</strong></a>}
+    </nav>
   </div>
 </Base>

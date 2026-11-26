@@ -29,6 +29,12 @@ interface Props {
 const { entry, previous, next, foot } = Astro.props;
 const { data } = entry;
 const { Content } = await render(entry);
+// 이 작업을 다룬 노트: 태그가 작업 id 와 같거나 작업 id 의 앞부분(claude-code → claude-code-alert)일 때
+const related = (await getCollection("notes", ({ data }) => !data.draft))
+  .filter((note) => note.data.tags.some((tag) => tag === entry.id || entry.id.startsWith(`${tag}-`)))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 4);
+const formatDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll("-", ".");
 // 운영 중인 서비스면 실제 상태 한 칸 (빌드 값 → 브라우저에서 갱신, src/scripts/live-status.ts)
 const status = data.status === "live" ? await fetchLiveStatus(entry.id) : null;
 const builtAt = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
@@ -72,6 +78,23 @@ const builtAt = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul", mon
 
     <article class="shell--narrow prose"><Content /></article>
 
+    {related.length > 0 && (
+      <section class="shell--narrow related" aria-label="관련 기록">
+        <p class="eyebrow related__eyebrow">관련 기록</p>
+        <ul class="note-list">
+          {related.map((note) => (
+            <li>
+              <a class="note-row" href={`/notes/${note.id}`}>
+                <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+                <h3>{note.data.title}</h3>
+                <p>{note.data.summary}</p>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
     <nav class="shell pager" aria-label="다른 작업">
       <a href={`/work/${previous.id}`}><span>← 이전</span><strong>{previous.data.title}</strong></a>
       <a href={`/work/${next.id}`}><span>다음 →</span><strong>{next.data.title}</strong></a>
